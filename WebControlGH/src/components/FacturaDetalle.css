@@ -1,0 +1,51 @@
+.gestion-facturas-container { /* Contenedor principal de la gestión de facturas */
+  max-width: 1300px; 
+  margin: 20px auto;
+  padding: 30px; 
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 { /* Estilo para el encabezado de la sección */
+  text-align: center;
+  margin-bottom: 30px; 
+  font-size: 24px; 
+}
+
+h3 { /* Estilo para subtítulos */
+  margin-top: 20px;
+  margin-bottom: 15px;
+  color: #333;
+  font-size: 20px; 
+}
+
+table { /* Estilo para la tabla que contiene los detalles de la factura */
+  width: 30%; 
+  border-collapse: collapse; 
+}
+
+th, td { /* Estilo para las celdas de encabezado y datos */
+  padding: 10px; 
+  text-align: center; /* Centra el texto en las celdas */
+  white-space: nowrap; 
+  border-right: 1px solid white; /* Línea blanca entre columnas */
+}
+
+th:last-child, td:last-child { /* Eliminar el borde derecho de la última columna */
+  border-right: none; 
+}
+
+th { /* Estilo específico para las celdas de encabezado */
+  background-color: #007bff; 
+  color: white; 
+}
+
+tr:nth-child(even) { /* Estilo para filas pares de la tabla */
+  background-color: #f9f9f9; 
+}
+
+tr:nth-child(odd) { /* Estilo para filas impares de la tabla */
+  background-color: #ffffff; 
+}

@@ -1,0 +1,124 @@
+.obras-list {
+  color: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.1);
+}
+
+.obras-list h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.obras-list p {
+  background-color: #0056b3;
+  padding: 10px;
+  color: white;
+  border-radius: 4px;
+  margin-bottom: 10px;
+}
+
+.alert {
+  margin-bottom: 5px;
+  border-radius: 20px;
+  color: white;
+}
+
+.alert-danger {
+  background-color: #ff4c4c;
+}
+
+.alert-warning {
+  background-color: #ffb74d;
+}
+
+.alert-info {
+  background-color: #4fc3f7;
+}
+
+.search-bar2 {
+  width: 35%; /* Ajusta el tamaño del campo de búsqueda y el botón */
+}
+
+.search-bar2 input {
+  height: 40px; /* Ajusta la altura del campo de búsqueda */
+  margin-top: 50px;
+  margin-bottom: 15px;
+  padding: 0 10px; /* Añade padding para un mejor ajuste visual */
+}
+
+.search-bar2 button {
+  height: 40px; /* Ajusta la altura del botón */
+  border-radius: 10px; /* Agrega border-radius para el botón */
+  margin-bottom: 25px;
+}
+
+.table {
+  width: 100%;
+  margin-bottom: 1rem;
+  background-color: transparent;
+  color: white;
+}
+
+.table th,
+.table td {
+  padding: 0.75rem;
+  vertical-align: top;
+  border-top: 1px solid #dee2e6;
+}
+
+.table thead th {
+  vertical-align: bottom;
+  border-bottom: 2px solid #dee2e6;
+  background-color: #006486;
+}
+
+.table tbody + tbody {
+  border-top: 2px solid #dee2e6;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.btn-info {
+  background-color: #007BFF;
+  border-color: #007BFF;
+  color: white;
+}
+
+.btn-info:hover {
+  background-color: #0056b3;
+  border-color: #004997;
+}
+
+.btn {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.custom-button2 {
+  border-radius: 10px !important; /* Asegura que se aplique incluso si hay estilos previos */
+  
+}
+.custom-button {
+  border-radius: 10px !important; /* Asegura que se aplique incluso si hay estilos previos */
+  margin: 5px;
+  background-color: #dee2e6;
+  color: black;
+}
+.table-container {
+  overflow-x: auto;
+  margin-top: 20px;
+}
+
+.table th,
+.table td {
+  text-align: center;
+}
+
+@media (max-width: 767px) {
+  .table-responsive {
+    border: 0;
+  }
+}
+

@@ -1,0 +1,82 @@
+.nuevo-obra-container {
+  max-width: 100%; /* Ajusta este valor según sea necesario */
+  width: 100%;
+  margin: 0 auto; /* Centra el contenedor */
+  padding: 20px;
+}
+
+.nuevo-obra {
+  color: black;
+  padding: 20px;
+  background-color: rgb(208, 208, 208); /* Fondo blanco */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nuevo-obra h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.nuevo-obra fieldset {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.nuevo-obra legend {
+  width: auto;
+  padding: 0 10px;
+  font-size: 1.2em;
+  color: #007BFF;
+}
+
+.nuevo-obra .form-group {
+  margin-bottom: 15px;
+}
+
+.nuevo-obra .form-label {
+  color: black;
+}
+
+.nuevo-obra .form-control {
+  border-radius: 4px;
+}
+
+.nuevo-obra .form-check-label {
+  color: black;
+}
+
+.nuevo-obra .form-check-input {
+  margin-left: 0;
+}
+
+.nuevo-obra .actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.nuevo-obra .actions button {
+  margin-left: 10px;
+}
+
+.nuevo-obra .btn-primary {
+  background-color: #007BFF;
+  border-color: #007BFF;
+}
+
+.nuevo-obra .btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.nuevo-obra .btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.nuevo-obra .btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}

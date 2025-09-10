@@ -1,0 +1,82 @@
+############################ FACTURAS ############################
+
+### GET FACTURAS
+GET http://localhost:3002/facturas/
+
+### GET FACTURA
+GET http://localhost:3002/facturas/1/detalles
+
+### NUEVA FACTURA
+POST http://localhost:3002/facturas
+Content-Type: application/json
+
+{
+    "origen": "Proveedor Z",
+    "pedido_pos": 199,   
+    "obra": "Obra 1",
+    "fecha": "2025-09-05",
+    "concepto_f": "",
+    "concepto_l": "",
+    "cobrado": 0,
+    "importe": 500,
+    "obs_imp": "",
+    "importe_base": 500,     
+    "iva": 14,               
+    "factura_num": "FAC001"
+}
+
+
+### PUT
+
+PUT http://localhost:3002/facturas/15
+Content-Type: application/json
+
+{
+    "cobrado": 1,
+    "importe": 500,
+    "obs_imp": "Pagado",
+    "importe_base": 500,     
+    "iva": 14               
+}
+
+### DELETE FACTURA
+
+DELETE http://localhost:3002/facturas/15
+
+############################ PEDIDOS ############################
+
+### GET pedidos
+GET http://localhost:3002/pedidos
+
+### GET pedido especifico
+GET http://localhost:3002/pedidos/PED-002
+
+### POST pedido
+POST http://localhost:3002/pedidos
+Content-Type: application/json
+
+{
+    "id": "PED-005",
+    "obra": "Reforma Local",
+    "cliente": "Bar Manolo",
+    "proveedor": "Suministros Paco",
+    "fecha": "2025-04-04",
+    "estado": "Pendiente",
+    "importe": 800.00,
+    "concepto":"Reformar baños",
+    "referencia": "REF-1450",
+    "observaciones": ""
+}
+
+### PUT pedido
+PUT http://localhost:3002/pedidos/PED-005
+Content-Type: application/json
+
+{
+    "estado": "Entregado",
+    "importe": "800.00",
+    "observaciones": "Finalizado"
+}
+
+### DELETE Pedido
+DELETE http://localhost:3002/pedidos/PED-005 
