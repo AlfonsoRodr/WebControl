@@ -11,7 +11,6 @@ const formPorDefecto = {
   iva: "",
 };
 
-
 function DetalleFactura() {
   const [filteredFactura, setFilteredFactura] = useState();
   const { cod } = useParams(); // cod = id
