@@ -1,52 +1,54 @@
 import React, { useEffect, useState } from "react";
+// Este módulo nos permite traer datos desde el componente que ha
+// llamado a este componente
 import { useLocation } from "react-router-dom";
 
 import axios from "axios";
 
-function ImprimirFacturas() {
-  const [facturasDetalles, setFacturasDetalles] = useState([]);
+function ImprimirPedidos() {
+  // Estado para los detalles que se van a imprimir
+  const [pedidosDetalles, setPedidosDetalles] = useState([]);
+  // Estado para mostrar un mensaje de carga mientras se traen los pedidos
   const [loading, setLoading] = useState(true);
+  // Estado para mostrar un mensaje de error en la carga de pedidos
   const [error, setError] = useState(null);
 
+  // Objeto location. Accederemos a la propiedad state para sacar los pedidos a imprimir
   const location = useLocation();
-  const selectedFacturas = location.state.selectedFacturas;
-  console.log("ImprimirFacturas: Facturas para imprimir", selectedFacturas);
+  const selectedPedidos = location.state.selectedPedidos;
 
-  useEffect(() => {
-    const fetchDetalles = async () => {
-      try {
-        const detallesPromises = Array.from(selectedFacturas).map(
-          async (id) => {
-            console.log("Id factura", id);
-            const response = await axios.get(
-              `http://localhost:3002/facturas/${id}/detalles`
-            );
-            console.log({ id: id, detalles: response.data });
-            return { id: id, detalles: response.data };
-          }
+  // Fetch de los pedidos a imprimir
+  const fetchPedidos = async () => {
+    try {
+      const pedidoPromises = Array.from(selectedPedidos).map(async (id) => {
+        const response = await axios.get(`http://localhost:3002/pedidos/${id}`);
+        console.log(response.data);
+        return { id: id, detalles: response.data };
+      });
+      const pedidos = await Promise.all(pedidoPromises);
+      setPedidosDetalles(pedidos);
+    } catch (error) {
+      if (error.response) {
+        setError(
+          `Error: ${error.response.status} - ${
+            error.response.data.error ||
+            "Error al cargar los detalles de los pedidos."
+          }`
         );
-        const detalles = await Promise.all(detallesPromises);
-        setFacturasDetalles(detalles);
-      } catch (error) {
-        if (error.response) {
-          setError(
-            `Error: ${error.response.status} - ${
-              error.response.data.error ||
-              "Error al cargar los detalles de las facturas."
-            }`
-          );
-        } else if (error.request) {
-          setError("Error en la solicitud al servidor.");
-        } else {
-          setError("Error desconocido al cargar los detalles de las facturas.");
-        }
-      } finally {
-        setLoading(false);
+      } else if (error.request) {
+        setError("Error en la solicitud al servidor.");
+      } else {
+        setError("Error desconocido al cargar los detalles de los pedidos.");
       }
-    };
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    fetchDetalles();
-  }, [selectedFacturas]);
+  // UseEffect para cargar los pedidos a imprimir cuando se monte el componente por primera vez
+  useEffect(() => {
+    fetchPedidos();
+  }, [selectedPedidos]);
 
   if (loading) {
     return <div>Cargando detalles de las facturas...</div>;
@@ -59,11 +61,11 @@ function ImprimirFacturas() {
   return (
     <div>
       <h2 style={{ fontSize: "18px ", textAlign: "right" }}>
-        Facturas ControlCube
+        Pedidos ControlCube
       </h2>
-      {facturasDetalles.map(({ id, detalles }) => (
+      {pedidosDetalles.map(({ id, detalles }) => (
         <div key={id}>
-          <h3 style={{ fontSize: "14px" }}>Detalles de la Factura: {id}</h3>
+          <h3 style={{ fontSize: "14px" }}>Detalles del Pedido: {id}</h3>
           <table
             style={{
               width: "100%",
@@ -73,26 +75,6 @@ function ImprimirFacturas() {
           >
             <thead>
               <tr>
-                <th
-                  style={{
-                    border: "1px solid #ddd",
-                    padding: "8px",
-                    textAlign: "center",
-                    backgroundColor: "lightblue",
-                  }}
-                >
-                  Origen
-                </th>
-                <th
-                  style={{
-                    border: "1px solid #ddd",
-                    padding: "8px",
-                    textAlign: "center",
-                    backgroundColor: "lightblue",
-                  }}
-                >
-                  Pedido
-                </th>
                 <th
                   style={{
                     border: "1px solid #ddd",
@@ -111,7 +93,7 @@ function ImprimirFacturas() {
                     backgroundColor: "lightblue",
                   }}
                 >
-                  Cpto. F
+                  Cliente
                 </th>
                 <th
                   style={{
@@ -121,7 +103,7 @@ function ImprimirFacturas() {
                     backgroundColor: "lightblue",
                   }}
                 >
-                  Cpto. L
+                  Proveedor
                 </th>
                 <th
                   style={{
@@ -131,7 +113,7 @@ function ImprimirFacturas() {
                     backgroundColor: "lightblue",
                   }}
                 >
-                  Impte. Base
+                  Fecha
                 </th>
                 <th
                   style={{
@@ -141,7 +123,7 @@ function ImprimirFacturas() {
                     backgroundColor: "lightblue",
                   }}
                 >
-                  IVA (%)
+                  Estado
                 </th>
                 <th
                   style={{
@@ -151,7 +133,7 @@ function ImprimirFacturas() {
                     backgroundColor: "lightblue",
                   }}
                 >
-                  Impte. Iva
+                  Importe
                 </th>
                 <th
                   style={{
@@ -161,7 +143,17 @@ function ImprimirFacturas() {
                     backgroundColor: "lightblue",
                   }}
                 >
-                  Impte. Total
+                  Concepto
+                </th>
+                <th
+                  style={{
+                    border: "1px solid #ddd",
+                    padding: "8px",
+                    textAlign: "center",
+                    backgroundColor: "lightblue",
+                  }}
+                >
+                  Referencia
                 </th>
                 <th
                   style={{
@@ -173,47 +165,13 @@ function ImprimirFacturas() {
                 >
                   Obs.
                 </th>
-                <th
-                  style={{
-                    border: "1px solid #ddd",
-                    padding: "8px",
-                    textAlign: "center",
-                    backgroundColor: "lightblue",
-                  }}
-                >
-                  Cobrado
-                </th>
               </tr>
             </thead>
             <tbody>
               {detalles.length > 0 ? (
                 detalles.map((detalle) => {
-                  console.log(detalle);
-                  const importeBase = Number(detalle.importe_base);
-                  const iva = Number(detalle.iva);
-                  const importeIva = (importeBase * iva) / 100;
-                  const importeTotal = Number(detalle.importe);
-
                   return (
                     <tr key={detalle.id}>
-                      <td
-                        style={{
-                          border: "1px solid #ddd",
-                          padding: "8px",
-                          textAlign: "center",
-                        }}
-                      >
-                        {detalle.origen}
-                      </td>
-                      <td
-                        style={{
-                          border: "1px solid #ddd",
-                          padding: "8px",
-                          textAlign: "center",
-                        }}
-                      >
-                        {detalle.pedido_pos}
-                      </td>
                       <td
                         style={{
                           border: "1px solid #ddd",
@@ -230,7 +188,7 @@ function ImprimirFacturas() {
                           textAlign: "center",
                         }}
                       >
-                        {detalle.concepto_f}
+                        {detalle.cliente}
                       </td>
                       <td
                         style={{
@@ -239,7 +197,7 @@ function ImprimirFacturas() {
                           textAlign: "center",
                         }}
                       >
-                        {detalle.concepto_l}
+                        {detalle.proveedor}
                       </td>
                       <td
                         style={{
@@ -248,7 +206,7 @@ function ImprimirFacturas() {
                           textAlign: "center",
                         }}
                       >
-                        {importeBase.toFixed(2)} €
+                        {detalle.fecha}
                       </td>
                       <td
                         style={{
@@ -257,7 +215,7 @@ function ImprimirFacturas() {
                           textAlign: "center",
                         }}
                       >
-                        {iva}
+                        {detalle.estado}
                       </td>
                       <td
                         style={{
@@ -266,7 +224,7 @@ function ImprimirFacturas() {
                           textAlign: "center",
                         }}
                       >
-                        {importeIva.toFixed(2)} €
+                        {detalle.importe} €
                       </td>
                       <td
                         style={{
@@ -275,7 +233,7 @@ function ImprimirFacturas() {
                           textAlign: "center",
                         }}
                       >
-                        {importeTotal.toFixed(2)} €
+                        {detalle.concepto}
                       </td>
                       <td
                         style={{
@@ -284,17 +242,16 @@ function ImprimirFacturas() {
                           textAlign: "center",
                         }}
                       >
-                        {detalle.obs_imp}
+                        {detalle.referencia}
                       </td>
                       <td
                         style={{
                           border: "1px solid #ddd",
                           padding: "8px",
                           textAlign: "center",
-                          color: detalle.cobrado ? "green" : "red",
                         }}
                       >
-                        {detalle.cobrado ? "Sí" : "No"}
+                        {detalle.observaciones}
                       </td>
                     </tr>
                   );
@@ -309,7 +266,7 @@ function ImprimirFacturas() {
                       padding: "8px",
                     }}
                   >
-                    No hay detalles disponibles para esta factura.
+                    No hay detalles disponibles para esta pedido.
                   </td>
                 </tr>
               )}
@@ -321,4 +278,4 @@ function ImprimirFacturas() {
   );
 }
 
-export default ImprimirFacturas;
+export default ImprimirPedidos;

@@ -55,17 +55,13 @@ function GestionPedidos() {
 
   // Handler para la selección total
   const handleSelectAll = () => {
-    console.log("antes", selectAll)
     const newSelectAll = !selectAll;
-    console.log("antes", newSelectAll)
     setSelectAll(newSelectAll);
     if (newSelectAll) {
       setSelectedPedidos(filteredPedidos.map((pedido) => pedido.id));
-      console.log(selectedPedidos);
     } else {
       setSelectedPedidos([]);
     }
-    console.log("despues", selectAll)
   };
 
   const handleSearch = () => {
@@ -161,7 +157,9 @@ function GestionPedidos() {
       alert("Selecciona al menos un pedido para imprimir.");
       return;
     }
-    console.log("Pedidos seleccionados para imprimir:", selectedPedidos);
+    navigate("/home/imprimir-pedido", {
+      state: { selectedPedidos: selectedPedidos },
+    });
   };
 
   const indexOfLastPedido = currentPage * pedidosPorPagina;
@@ -288,7 +286,9 @@ function GestionPedidos() {
             <Button onClick={handleCrearPedido} className="custom-button">
               Nuevo Pedido
             </Button>
-            <Button className="custom-button">Eliminar Pedido</Button>
+            <Button onClick={handleDeletePedidos} className="custom-button">
+              Eliminar Pedido
+            </Button>
             <Button onClick={handleImprimirPedidos} className="custom-button">
               Imprimir Pedidos
             </Button>
@@ -321,8 +321,8 @@ function GestionPedidos() {
                 <td>
                   <input
                     type="checkbox"
-                    checked={selectedPedidos.includes(pedido.referencia)}
-                    onChange={() => handleCheckboxChange(pedido.referencia)}
+                    checked={selectedPedidos.includes(pedido.id)}
+                    onChange={() => handleCheckboxChange(pedido.id)}
                   />
                 </td>
                 <td>{pedido.referencia}</td>

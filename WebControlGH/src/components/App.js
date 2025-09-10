@@ -1,3 +1,4 @@
+import React from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css'; // Importa los estilos de Bootstrap
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'; // Importa componentes de navegación
 import Login from './Login'; // Importa el componente Login
@@ -10,6 +11,7 @@ import GestionFacturas from './GestionFacturas';
 import NuevaFactura from './NuevaFactura';
 import NuevoPedido from './NuevoPedido';
 import ImprimirFacturas from './ImprimirFacturas'; // Importa el componente ImprimirFactura
+import ImprimirPedidos from './ImprimirPedido'; // Importar el componente ImprimirPedido
 import GestionAlmacen from './GestionAlmacen';
 import GestionPedidos from './GestionPedidos';
 import DetalleObra from './DetalleObra';
@@ -50,6 +52,7 @@ function MainLayout() {
           <Route path="gestion-compras/detalle/:numero" element={<DetalleCompra />} />
           <Route path="gestion-pedidos/detalle/:id" element={<DetallePedido />} />     
           <Route path="imprimir-factura" element={<ImprimirFacturas />} /> {/* Nueva ruta para imprimir facturas */}
+          <Route path="imprimir-pedido" element={<ImprimirPedidos />} />
           <Route path="gestion-almacen" element={<GestionAlmacen />} /> 
           <Route path="gestion-pedidos" element={<GestionPedidos />} /> 
           <Route path="gestion-compras" element={<GestionCompras />} /> 
