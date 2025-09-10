@@ -10,12 +10,13 @@ import GestionFacturas from './GestionFacturas';
 import NuevaFactura from './NuevaFactura';
 import NuevoPedido from './NuevoPedido';
 import ImprimirFacturas from './ImprimirFacturas'; // Importa el componente ImprimirFactura
+import NuevaCompra from './Compra/NuevaCompra';
 import GestionAlmacen from './GestionAlmacen';
 import GestionPedidos from './GestionPedidos';
 import DetalleObra from './DetalleObra';
 import DetallePedido from './DetallePedido';
 import DetalleFactura from './DetalleFactura';
-import GestionCompras from './GestionCompras';
+import GestionCompras from './Compra/GestionCompras';
 import DetalleCompra from './DetalleCompra';
 
 // Componente principal de la aplicación
@@ -44,6 +45,7 @@ function MainLayout() {
           <Route path="nuevo-obra" element={<NuevoObra />} />
           <Route path="nueva-factura" element={<NuevaFactura />} />
           <Route path="nuevo-pedido" element={<NuevoPedido />} />
+          <Route path="nueva-compra" element={<NuevaCompra />} />
           <Route path="profitability" element={<ProfitabilityTable />} />
           <Route path="gestion-facturas" element={<GestionFacturas />} />  
           <Route path="gestion-facturas/detalle/:cod" element={<DetalleFactura />} /> 
