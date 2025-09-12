@@ -1,6 +1,6 @@
 import React, { useState } from 'react'; // Importa React y el hook useState
 import { useNavigate } from 'react-router-dom'; // Importa el hook useNavigate para la navegación
-import './Login.css'; // Importa los estilos específicos de Login
+import '../../css/Login.css'; // Importa los estilos específicos de Login
 
 // Componente Login
 function Login() {

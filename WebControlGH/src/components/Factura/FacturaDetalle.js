@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
-import './FacturaDetalle.css';
+import '../../css/FacturaDetalle.css';
 
 function FacturaDetalle() {
     const { facturaNum } = useParams();

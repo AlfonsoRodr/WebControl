@@ -1,3 +1,5 @@
+DROP DATABASE IF EXISTS FacturasDB;
+
 CREATE DATABASE FacturasDB;
 
 -- Seleccionar la base de datos para trabajar en ella
@@ -12,9 +14,25 @@ CREATE TABLE CabeceraFactura (
 CREATE TABLE inventario (
   id INT AUTO_INCREMENT PRIMARY KEY,
   nombre VARCHAR(255) NOT NULL,
+  descripcion TEXT,
   cantidad INT NOT NULL,
   ubicacion VARCHAR(100)
 );
+
+-- Creación de la tabla pedidos
+CREATE TABLE pedidos (
+	id VARCHAR(255) PRIMARY KEY,
+    obra VARCHAR(255) NOT NULL,
+    cliente VARCHAR(255) NOT NULL,
+    proveedor VARCHAR(255) NOT NULL,
+    fecha DATE NOT NULL,
+    estado ENUM('Pendiente', 'Entregado', 'Enviado'),
+    importe DECIMAL(10,2) NOT NULL,
+    concepto VARCHAR(255) NOT NULL,
+	referencia VARCHAR(255) NOT NULL,
+    observaciones TEXT
+);
+
 -- Creación de la tabla FacturaDetalle con clave foránea compuesta
 CREATE TABLE FacturaDetalle (
     id INTEGER PRIMARY KEY AUTO_INCREMENT,
@@ -32,6 +50,26 @@ CREATE TABLE FacturaDetalle (
 
     factura_num VARCHAR(50),
     CONSTRAINT FK_factura_num FOREIGN KEY (factura_num) REFERENCES CabeceraFactura(factura_num)
+);
+
+-- Creación de la tabla obras
+
+CREATE TABLE obras (
+	cod VARCHAR(50) PRIMARY KEY,
+    descripcion TEXT NOT NULL,
+    tipo VARCHAR(50) NOT NULL,
+    estado ENUM('Pendiente', 'Confirmada','En Progreso'),
+    empresa VARCHAR(50) NOT NULL,
+    fOferta DATE NOT NULL,
+    obs TEXT,
+    r INTEGER NOT NULL, -- % Rentabilidad
+    pP INTEGER NOT NULL, -- % Pedido de la obra
+    fP INTEGER NOT NULL, -- % Facturado de la obra
+    fecha_seg DATE,
+    horasImputadas INTEGER NOT NULL,
+    horasPrevistas INTEGER NOT NULL,
+    totalmenteFacturadas BOOL NOT NULL,
+    fechaFacturacion DATE
 );
 
 -- INSERT
@@ -62,4 +100,25 @@ INSERT INTO inventario (id, nombre, descripcion, cantidad, ubicacion) VALUES
 (3, 'Tubo PVC 110mm', 'Tubo de PVC para saneamiento', 300, 'Pasillo C3'),
 (4, 'Pintura Blanca', 'Bote de pintura 15L', 40, 'Almacén Central A4'),
 (5, 'Cable Eléctrico 3x2.5', 'Rollo de cable eléctrico de 50m', 55, 'Zona Técnica D1');
+
+INSERT INTO pedidos (id, obra, cliente, proveedor, fecha, estado, importe, concepto, referencia, observaciones) VALUES
+	('PED-001', 'Construcción Edificio A', 'Inmobiliaria El Pilar', 'Suministros S.A.', '2024-12-01', 'Pendiente', 12500, 'Materiales de construcción', 'REF-4567', 'Entrega prevista en 10 días'),
+    ('PED-002', 'Reforma Local B', 'Comercial Muebles', 'Ferretería Martínez', '2024-12-03', 'Entregado', 3400, 'Herramientas eléctricas', 'REF-7890', ''),
+    ('PED-003', 'Instalaciones Industriales C', 'Industria Termotécnica', 'TecnoSuministros', '2024-12-05', 'Enviado', 9000, 'Equipamiento técnico', 'REF-1234', 'Falta confirmar stock'),
+    ('PED-004', 'Edificio Corporativo D', 'Grupo Empresarial Omega', 'Construrápido', '2024-12-07', 'Pendiente', 15000, 'Acabados interiores', 'REF-5678', 'Cliente quiere ver muestras');
+    
+INSERT INTO obras (cod, descripcion, tipo, estado, empresa, fOferta, obs, r, pP, fP, fecha_seg, horasImputadas, horasPrevistas, totalmenteFacturadas, fechaFacturacion) VALUES
+('3801R0', 'MANTENIMIENTO PREVENTIVO...', 'Mant.', 'Confirmada', 'Siemens', '2022-05-31', '[-]', 0, 67, 50, NULL, 100, 90, TRUE, '2023-01-01'),
+('4319R0', 'GKN DRIVELINE MANTENIMIENTO', 'Mant.', 'Confirmada', 'Siemens', '2024-02-06', '[-]', 100, 100, 0, NULL, 50, 60, TRUE, '2023-01-01'),
+('1234R5', 'Otra descripción', 'Tipo X', 'Pendiente', 'Empresa Y', '2023-07-15', '[-]', 80, 90, 10, '2023-07-25', 80, 100, FALSE, NULL),
+('2345R6', 'Descripción 1', 'Tipo A', 'En Progreso', 'Empresa Z', '2023-12-12', '[-]', 90, 95, 20, '2024-01-01', 120, 110, FALSE, NULL),
+('3456R7', 'Descripción 2', 'Tipo B', 'En Progreso', 'Empresa X', '2023-09-05', '[-]', 85, 80, 30, '2023-09-15', 90, 80, FALSE, NULL),
+('9876R5', 'Descripción 95', 'Tipo F', 'Pendiente', 'Empresa Y', '2023-11-20', '[-]', 70, 75, 60, NULL, 60, 70, FALSE, NULL),
+('6789R1', 'Descripción 96', 'Tipo C', 'Confirmada', 'Empresa Z', '2023-08-18', '[-]', 95, 90, 25, NULL, 110, 120, TRUE, '2023-01-01'),
+('7890R2', 'Descripción 97', 'Tipo D', 'En Progreso', 'Empresa X', '2023-06-22', '[-]', 75, 85, 40, '2023-07-01', 100, 110, FALSE, NULL),
+('8901R3', 'Descripción 98', 'Tipo E', 'En Progreso', 'Empresa Y', '2023-10-10', '[-]', 60, 70, 50, NULL, 80, 90, FALSE, NULL),
+('9012R4', 'Descripción 99', 'Tipo F', 'Pendiente', 'Empresa Z', '2023-03-05', '[-]', 85, 80, 75, '2023-03-15', 70, 80, FALSE, NULL),
+('1123R5', 'Descripción 100', 'Tipo A', 'Pendiente', 'Empresa X', '2023-04-07', '[-]', 95, 85, 80, NULL, 90, 100, FALSE, NULL);
+	
+
 

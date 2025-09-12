@@ -1,5 +1,5 @@
 import React, { useState } from 'react'; // Importa React y el hook useState
-import './Profitability.css'; // Importa los estilos específicos de Profitability
+import '../../css/Profitability.css'; // Importa los estilos específicos de Profitability
 
 // Componente ProfitabilityTable
 function ProfitabilityTable() {

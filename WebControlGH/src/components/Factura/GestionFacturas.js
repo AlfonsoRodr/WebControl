@@ -13,7 +13,7 @@ import {
 } from "react-bootstrap";
 
 import { useNavigate } from "react-router-dom";
-import "./GestionFacturas.css";
+import "../../css/FacturaDetalle.css";
 import axios from "axios";
 
 let allFacturas = null;

@@ -1,25 +1,40 @@
 import React from 'react';
-import 'bootstrap/dist/css/bootstrap.min.css'; // Importa los estilos de Bootstrap
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'; // Importa componentes de navegación
-import Login from './Login'; // Importa el componente Login
-import Navbar from './Navbar'; // Importa el componente Navbar
-import ObrasList from './ObrasList'; // Importa el componente ObrasList
-import NuevoObra from './NuevoObra'; // Importa el componente NuevoObra
-import ProfitabilityTable from './ProfitabilityTable'; // Importa el componente ProfitabilityTable
-import './App.css'; // Importa los estilos globales
-import GestionFacturas from './GestionFacturas';
-import NuevaFactura from './NuevaFactura';
-import NuevoPedido from './NuevoPedido';
-import ImprimirFacturas from './ImprimirFacturas'; // Importa el componente ImprimirFactura
-import ImprimirPedidos from './ImprimirPedido'; // Importar el componente ImprimirPedido
-import NuevaCompra from './Compra/NuevaCompra';
-import GestionAlmacen from './GestionAlmacen';
-import GestionPedidos from './GestionPedidos';
-import DetalleObra from './DetalleObra';
-import DetallePedido from './DetallePedido';
-import DetalleFactura from './DetalleFactura';
-import GestionCompras from './Compra/GestionCompras';
-import DetalleCompra from './DetalleCompra';
+import 'bootstrap/dist/css/bootstrap.min.css'; 
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'; 
+import '../../css/App.css'; 
+
+// -- LOGIN -- \\
+import Login from '../Login/Login'; 
+// -- NAVBAR -- \\
+import Navbar from '../Navbar/Navbar'; 
+
+// -- TABLA RENTABILIDAD -- \\
+import ProfitabilityTable from '../Rentabilidad/ProfitabilityTable'; 
+
+// -- ALMACEN -- \\
+import GestionAlmacen from '../Almacen/GestionAlmacen';
+
+// -- OBRA -- \\
+import ObrasList from '../Obra/ObrasList'; 
+import DetalleObra from '../Obra/DetalleObra';
+import NuevoObra from '../Obra/NuevoObra';
+
+// -- FACTURA -- \\
+import GestionFacturas from '../Factura/GestionFacturas';
+import DetalleFactura from '../Factura/DetalleFactura';
+import NuevaFactura from '../Factura/NuevaFactura';
+import ImprimirFacturas from '../Factura/ImprimirFacturas';
+
+// -- PEDIDO -- \\
+import GestionPedidos from '../Pedido/GestionPedidos';
+import DetallePedido from '../Pedido/DetallePedido';
+import NuevoPedido from '../Pedido/NuevoPedido';
+import ImprimirPedidos from '../Pedido/ImprimirPedido'; 
+
+// -- COMPRA -- \\
+import GestionCompras from '../Compra/GestionCompras';
+import DetalleCompra from '../Compra/DetalleCompra';
+import NuevaCompra from '../Compra/NuevaCompra';
 
 // Componente principal de la aplicación
 function App() {

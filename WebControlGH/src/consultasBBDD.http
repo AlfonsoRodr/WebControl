@@ -80,3 +80,53 @@ Content-Type: application/json
 
 ### DELETE Pedido
 DELETE http://localhost:3002/pedidos/PED-005 
+
+############################ OBRAS ############################
+
+### GET Obras
+GET http://localhost:3002/obras
+
+### GET Obra específica
+GET http://localhost:3002/obras/1123R5
+
+### POST Obra
+POST http://localhost:3002/obras
+Content-Type: application/json
+
+{
+    "cod": "8821R9",
+    "descripcion": "Instalación de alarma",
+    "tipo": "Instalación",
+    "estado": "Pendiente",
+    "empresa": "Securitas Direct",
+    "fOferta": "2025-09-10",
+    "obs": "[-]",
+    "r": 95,
+    "pP": 85,
+    "fP": 80,
+    "fecha_seg": null,
+    "horasImputadas": 90,
+    "horasPrevistas": 100,
+    "totalmenteFacturadas": 0,
+    "fechaFacturacion": null
+}
+
+### Actualizar obra
+PUT http://localhost:3002/obras/8821R9
+Content-Type: application/json
+
+{
+    "estado": "En Progreso",
+    "obs": "Estamos trabajando en ello",
+    "r": 95,
+    "pP": 85,
+    "fP": 80,
+    "fecha_seg": null,
+    "horasImputadas": 90,
+    "horasPrevistas": 100,
+    "totalmenteFacturadas": 0,
+    "fechaFacturacion": null
+}
+
+### Eliminar obra
+DELETE http://localhost:3002/obras/8821R9

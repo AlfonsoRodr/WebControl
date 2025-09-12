@@ -34,11 +34,8 @@ const NuevoPedido = () => {
     event.preventDefault();
 
     try {
-      const response = await axios.post(
-        "http://localhost:3002/pedidos",
-        formData
-      );
-      alert("Pedido guardado con éxito", response.data);
+      await axios.post("http://localhost:3002/pedidos", formData);
+      alert("Pedido guardado con éxito");
       navigate("/home/gestion-pedidos");
     } catch (error) {
       if (error) {

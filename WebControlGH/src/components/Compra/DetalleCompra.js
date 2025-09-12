@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Container, Form, Card, Row, Col } from 'react-bootstrap';
 
-import { facturas } from './ComprasData';
+import { facturas } from '../ComprasData';
 
 function DetalleCompra() {
   const { numero } = useParams(); // el número de la factura

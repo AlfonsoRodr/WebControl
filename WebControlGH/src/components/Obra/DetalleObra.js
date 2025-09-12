@@ -1,7 +1,7 @@
 import React, { useState } from 'react'; 
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button, Container, Form, Card, Accordion } from 'react-bootstrap';
-import { obras } from './obrasData'; 
+import { obras } from '../obrasData'; 
 
 const DetalleObra = () => {
   const { cod } = useParams(); // Obtiene el código de la obra desde la URL

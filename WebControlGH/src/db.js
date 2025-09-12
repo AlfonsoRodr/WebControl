@@ -495,6 +495,208 @@ app.delete("/pedidos/:id", (req, res) => {
   });
 });
 
+// --- ENDPOINTS DE OBRAS ---
+
+// Obtener todas las obras
+app.get("/obras", (req, res) => {
+  const query = `
+    SELECT
+      o.cod,
+      o.descripcion,
+      o.tipo,
+      o.estado,
+      o.empresa,
+      o.fOferta,
+      o.obs,
+      o.r,
+      o.pP,
+      o.fP,
+      o.fecha_seg,
+      o.horasImputadas,
+      o.horasPrevistas,
+      o.totalmenteFacturadas,
+      o.fechaFacturacion
+    
+    FROM 
+      obras o
+  `;
+
+  const values = [];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error(`Error al obtener las obras - ${err}`);
+      return res
+        .status(500)
+        .json({ message: `Error al obtener las obras - ${err}` });
+    }
+    return res.status(200).json(result);
+  });
+});
+
+// Obtener una obra específica
+app.get("/obras/:cod", (req, res) => {
+  const { cod } = req.params;
+  const query = `
+    SELECT
+      o.cod,
+      o.descripcion,
+      o.tipo,
+      o.estado,
+      o.empresa,
+      o.fOferta,
+      o.obs,
+      o.r,
+      o.pP,
+      o.fP,
+      o.fecha_seg,
+      o.horasImputadas,
+      o.horasPrevistas,
+      o.totalmenteFacturadas,
+      o.fechaFacturacion
+    
+    FROM 
+      obras o
+    
+    WHERE
+      cod = ?
+  `;
+  const values = [cod];
+
+  db.query(query, values, (err, result) => {
+    if (err) {
+      console.error(`Error al obtener la obra con código ${cod} - ${err}`);
+      return res.status(500).json({
+        message: `Error al obtener la obra con código ${cod} - ${err}`,
+      });
+    }
+    return res.status(200).json(result);
+  });
+});
+
+// Añadir una obra
+app.post("/obras", (req, res) => {
+  const {
+    cod,
+    descripcion,
+    tipo,
+    estado,
+    empresa,
+    fOferta,
+    obs,
+    r,
+    pP,
+    fP,
+    fecha_seg,
+    horasImputadas,
+    horasPrevistas,
+    totalmenteFacturadas,
+    fechaFacturacion,
+  } = req.body;
+  const values = [
+    cod,
+    descripcion,
+    tipo,
+    estado,
+    empresa,
+    fOferta,
+    obs,
+    r,
+    pP,
+    fP,
+    fecha_seg,
+    horasImputadas,
+    horasPrevistas,
+    totalmenteFacturadas,
+    fechaFacturacion,
+  ];
+  const query = `INSERT INTO obras (cod, descripcion, tipo, estado, empresa, fOferta, obs, r, pP, fP, fecha_seg, 
+                  horasImputadas, horasPrevistas, totalmenteFacturadas, fechaFacturacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+  db.query(query, values, (err) => {
+    if (err) {
+      console.error(`Error al guardar la obra - ${err}`);
+      return res
+        .status(500)
+        .json({ message: `Error al guardar la obra - ${err}` });
+    }
+    return res.status(201).json({ message: "Obra almacenada correctamente" });
+  });
+});
+
+// Actualizar obra
+app.put("/obras/:cod", (req, res) => {
+  const { cod } = req.params;
+  const {
+    estado,
+    obs,
+    r,
+    pP,
+    fP,
+    fecha_seg,
+    horasImputadas,
+    horasPrevistas,
+    totalmenteFacturadas,
+    fechaFacturacion,
+  } = req.body;
+  const values = [
+    estado,
+    obs,
+    r,
+    pP,
+    fP,
+    fecha_seg,
+    horasImputadas,
+    horasPrevistas,
+    totalmenteFacturadas,
+    fechaFacturacion,
+    cod,
+  ];
+  const query = `
+    UPDATE
+      obras
+    SET
+      estado = ?,
+      obs = ?,
+      r = ?,
+      pP = ?,
+      fP = ?,
+      fecha_seg = ?,
+      horasImputadas = ?,
+      horasPrevistas = ?,
+      totalmenteFacturadas = ?,
+      fechaFacturacion = ?
+    WHERE
+      cod = ?
+  `;
+
+  db.query(query, values, (err) => {
+    if (err) {
+      console.error(`Error al actualizar la obra con código ${cod} - ${err}`);
+      return res.status(500).json({
+        message: `Error al actualizar la obra con código ${cod} - ${err}`,
+      });
+    }
+    return res.json({ message: "Obra actualizada correctamente" });
+  });
+});
+
+// Eliminar obra
+app.delete("/obras/:cod", (req, res) => {
+  const { cod } = req.params;
+  const query = `DELETE FROM obras WHERE cod = ?`;
+  const values = [cod];
+  db.query(query, values, (err) => {
+    if (err) {
+      console.error(`Error al eliminar la obra con código ${cod} - ${err}`);
+      return res.status(500).json({
+        message: `Error al eliminar la obra con código ${cod} - ${err}`,
+      });
+    }
+    return res.json({ message: "Obra eliminada correctamente" });
+  });
+});
+
 // Iniciar el servidor
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
