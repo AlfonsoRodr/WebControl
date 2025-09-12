@@ -38,7 +38,7 @@ function GestionCompras() {
   }, []);
 
   const fetchFacturas = async () => {
-    const endpoint = "http://localhost:3002/facturas";
+    const endpoint = "http://localhost:3002/compras";
     try {
       const res = await axios.get(endpoint);
       allFacturas = res.data;
@@ -72,9 +72,9 @@ function GestionCompras() {
   // TODO
   const deleteFactura = async (selectedFacturas) => {
     try {
-      const deletePromises = Array.from(selectedFacturas).map(async (id) => {
-        await axios.delete(`http://localhost:3002/facturas/${id}`);
-        console.log(`Factura ${id} eliminada satisfactoriamente`);
+      const deletePromises = Array.from(selectedFacturas).map(async (numero) => {
+        await axios.delete(`http://localhost:3002/compras/${numero}`);
+        console.log(`Factura ${numero} eliminada satisfactoriamente`);
       });
       await Promise.all(deletePromises);
       // Si todo ha ido bien devolvemos true

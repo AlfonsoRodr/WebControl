@@ -43,7 +43,7 @@ const NuevaCompra = () => {
     // Realizar la solicitud POST con los datos de la factura
     try {
       const response = await axios.post(
-        "http://localhost:3002/facturas",
+        "http://localhost:3002/compras",
         datosFactura
       );
       console.log("Factura guardada:", response.data);
