@@ -1,6 +1,7 @@
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
+const validator = require("./validations/comprasValidator");
 
 const app = express();
 const PORT = 3002; // O el puerto que prefieras
@@ -303,6 +304,220 @@ app.delete("/facturas/:id", (req, res) => {
      */
   });
 });
+
+// -- ENDPOINTS DE COMPRAS --
+app.get("/compras", async (req, res) => {
+  try {
+    const [rows] = await db.promise().query("SELECT * FROM Compras");
+    res.json(rows);
+  }
+  catch (err) {
+    console.error("Error en la consulta SQL:", err.message);
+    res.status(500).json({ message: "There was an error in the query" });
+  }
+});
+
+async function findCompra(numero) {
+  const [rows] = await db.promise().query("SELECT * FROM Compras WHERE numero = ?", [numero]);
+  return rows.length > 0 ? rows[0] : null;
+}
+
+app.get("/compras/:numero", async (req, res) => {
+  try {
+    const { numero } = req.params;
+    const result = await findCompra(numero);
+
+    if (!result) {
+      return res.status(404).json({ message: "404 NOT FOUND" });
+    }
+    return res.json(result);;
+  }
+  catch (error) {
+    console.error("Error en la consulta SQL: ", error.message);
+    res.status(500).json({ message: "There was an error in the query" });
+  }
+});
+
+app.post("/compras", async (req, res) => {
+  const result = validator.validateCompra(req.body);
+
+  if (!result.success) {
+    return res.status(400).json({ error: JSON.parse(result.error.message) });
+  }
+
+  const {
+    numero,
+    fechaFactura,
+    concepto,
+    proveedor,
+    tipo,
+    baseIva,
+    totalIva,
+    asignado,
+    totalAsignado,
+    observaciones
+  } = result.data;
+
+  const query = `INSERT INTO Compras (
+      numero, fecha_factura, concepto, proveedor, tipo, base_iva, total_iva, asignado, total_asignado, observaciones
+    ) VALUES (?,?,?,?,?,?,?,?,?,?)`;
+
+  try {
+
+    const [dbResult] = await db.promise().query(query, [
+      numero,
+      new Date(fechaFactura),
+      concepto,
+      proveedor,
+      tipo,
+      baseIva,
+      totalIva,
+      asignado,
+      totalAsignado,
+      observaciones
+    ]);
+
+    return res.status(201).json({
+      message: "Compra creada",
+      insertId: dbResult.insertId,
+      affectedRows: dbResult.affectedRows
+    });
+
+  } catch (error) {
+    console.error("Error en la consulta SQL: ", error.message);
+    return res.status(500).json({ message: "There was an error in the query" });
+  }
+});
+
+app.put("/compras/:numero", async (req, res) => {
+  const { numero } = req.params;
+
+  const compraExistente = await findCompra(numero);
+  if (!compraExistente) return res.status(404).json({ message: "NOT FOUND" });
+
+  const result = validator.validateCompra(req.body);
+  if (!result.success) {
+    return res.status(400).json({ error: JSON.parse(result.error.message) });
+  }
+
+  try {
+    const {
+      fechaFactura,
+      concepto,
+      proveedor,
+      tipo,
+      baseIva,
+      totalIva,
+      asignado,
+      totalAsignado,
+      observaciones
+    } = result.data;
+
+    const updateQuery = `
+      UPDATE Compras SET 
+        fecha_factura = ?, 
+        concepto = ?, 
+        proveedor = ?, 
+        tipo = ?, 
+        base_iva = ?, 
+        total_iva = ?, 
+        asignado = ?, 
+        total_asignado = ?, 
+        observaciones = ?
+      WHERE numero = ?
+    `;
+
+    await db.promise().query(updateQuery, [
+      new Date(fechaFactura),
+      concepto,
+      proveedor,
+      tipo,
+      baseIva,
+      totalIva,
+      asignado,
+      totalAsignado,
+      observaciones,
+      numero
+    ]);
+
+    const compraActualizada = await findCompra(numero);
+    return res.status(200).json(compraActualizada);
+
+  }
+  catch (error) {
+    console.error("Error en la consulta SQL:", error.message);
+    return res.status(500).json({ message: "There was an error in the query" });
+  }
+});
+
+app.patch("/compras/:numero", async (req, res) => {
+  const { numero } = req.params;
+  const result = await findCompra(numero);
+
+  if (!result) {
+    return res.status(404).json({ message: "404 NOT FOUND" });
+  }
+
+  const resultValidation = validator.validatePartialCompra(req.body);
+
+  if (!resultValidation.success) {
+    return res.status(400).json({ error: JSON.parse(resultValidation.error.message) });
+  }
+
+  try {
+    const campos = [];
+    const valores = [];
+
+    // Se construye una query dinámica solo con los campos que vienen
+    for (const [key, value] of Object.entries(resultValidation.data)) {
+      let columna = key;
+      if (key === "fechaFactura") columna = "fecha_factura";
+      if (key === "baseIva") columna = "base_iva";
+      if (key === "totalIva") columna = "total_iva";
+      if (key === "totalAsignado") columna = "total_asignado";
+
+      campos.push(`${columna} = ?`);
+      valores.push(value);
+    }
+
+    if (campos.length === 0) {
+      return res.status(400).json({ message: "No fields to update" });
+    }
+
+    const updateQuery = `UPDATE Compras SET ${campos.join(", ")} WHERE numero = ?`;
+    valores.push(numero);
+
+    await db.promise().query(updateQuery, valores);
+
+    // Se devuelve la compra que se ha actualizado.
+    const compraActualizada = await findCompra(numero);
+    return res.status(200).json(compraActualizada);
+  }
+  catch (error) {
+    console.error("Error en la consulta SQL: ", error.message);
+    return res.status(500).json({ message: "There was an error in the query" });
+  }
+});
+
+app.delete("/compras/:numero", async (req, res) => {
+  try {
+    const { numero } = req.params;
+    const result = await findCompra(numero);
+
+    if (!result) {
+      return res.status(404).json({ message: "404 NOT FOUND" });
+    }
+
+    await db.promise().query("DELETE FROM Compras WHERE numero = ?", [numero]);
+    return res.status(200).json(result);
+
+  }
+  catch (error) {
+    console.error("Error en la consulta SQL: ", error.message);
+    return res.status(500).json({ message: "There was an error in the query" });
+  }
+});
+
 // --- ENDPOINTS DE INVENTARIO (almacén) ---
 
 // Obtener todos los productos
