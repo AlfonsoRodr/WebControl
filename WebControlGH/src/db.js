@@ -518,9 +518,6 @@ app.delete("/compras/:numero", async (req, res) => {
   }
 });
 
-
-
-
 // --- ENDPOINTS DE INVENTARIO (almacén) ---
 
 // Obtener todos los productos
