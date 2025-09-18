@@ -87,7 +87,7 @@ DELETE http://localhost:3002/pedidos/PED-005
 GET http://localhost:3002/obras
 
 ### GET Obra específica
-GET http://localhost:3002/obras/1123R5
+GET http://localhost:3002/obras/0001
 
 ### POST Obra
 POST http://localhost:3002/obras
@@ -130,3 +130,64 @@ Content-Type: application/json
 
 ### Eliminar obra
 DELETE http://localhost:3002/obras/8821R9
+
+### ENDPOINTS PARA LOS FORMS
+
+### TIPOS DE OBRA
+GET http://localhost:3002/api/tipos-obra
+
+
+###### ENDPOINTS ALMACEN #############
+
+### Obtener todos los productos
+GET http://localhost:3002/api/almacen
+
+### Obtener un producto específico
+GET http://localhost:3002/api/almacen/53
+
+### Crear un producto
+POST http://localhost:3002/api/almacen
+Content-Type: application/json
+
+{
+  "cod": "123456",
+  "descripcion": "Material de prueba",
+  "etiqueta": "uds.",
+  "proveedor": 850,
+  "familia": "2",
+  "tipoUnidad": 3,
+  "fechaAlta": "2016-06-21",
+  "usuarioAlta": 4,
+  "stock": 20,
+  "stockMin": 3.21,
+  "stockMax": 3.21,
+  "marca": 1,
+  "precioUnitario": 0.2,
+  "precioTotal": 4,
+  "observaciones": "Material de prueba"
+}
+
+### Actualizar un producto
+PUT http://localhost:3002/api/almacen/243
+Content-Type: application/json
+
+{
+  "cod": "123456",
+  "descripcion": "Material de prueba",
+  "etiqueta": "uds.",
+  "proveedor": 850,
+  "familia": "2",
+  "tipoUnidad": 3,
+  "fechaAlta": "2016-06-21",
+  "usuarioAlta": 4,
+  "stock": 20,
+  "stockMin": 3.21,
+  "stockMax": 3.21,
+  "marca": 1,
+  "precioUnitario": 0.2,
+  "precioTotal": 4,
+  "observaciones": "Observaciones actualizadas"
+}
+
+### Borrar un producto
+DELETE http://localhost:3002/api/almacen/243

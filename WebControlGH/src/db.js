@@ -2,6 +2,9 @@ const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
 const validator = require("./validations/comprasValidator");
+const { json } = require("zod");
+const { formServices } = require("./formServices");
+const { db } = require("./database.js");
 
 const app = express();
 const PORT = 3002; // O el puerto que prefieras
@@ -11,23 +14,6 @@ app.disable("x-powered-by");
 // Habilitar CORS para permitir el acceso desde el frontend
 app.use(cors());
 app.use(express.json());
-
-// Configuración de la conexión a MySQL
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  port: 3306,
-  password: "",
-  database: "FacturasDB",
-});
-
-db.connect((err) => {
-  if (err) {
-    console.error("Error al conectar con la base de datos:", err);
-    return;
-  }
-  console.log("Conectado a la base de datos MySQL");
-});
 
 // Endpoint para obtener todas las facturas
 app.get("/facturas", (req, res) => {
@@ -310,15 +296,16 @@ app.get("/compras", async (req, res) => {
   try {
     const [rows] = await db.promise().query("SELECT * FROM Compras");
     res.json(rows);
-  }
-  catch (err) {
+  } catch (err) {
     console.error("Error en la consulta SQL:", err.message);
     res.status(500).json({ message: "There was an error in the query" });
   }
 });
 
 async function findCompra(numero) {
-  const [rows] = await db.promise().query("SELECT * FROM Compras WHERE numero = ?", [numero]);
+  const [rows] = await db
+    .promise()
+    .query("SELECT * FROM Compras WHERE numero = ?", [numero]);
   return rows.length > 0 ? rows[0] : null;
 }
 
@@ -330,9 +317,8 @@ app.get("/compras/:numero", async (req, res) => {
     if (!result) {
       return res.status(404).json({ message: "404 NOT FOUND" });
     }
-    return res.json(result);;
-  }
-  catch (error) {
+    return res.json(result);
+  } catch (error) {
     console.error("Error en la consulta SQL: ", error.message);
     res.status(500).json({ message: "There was an error in the query" });
   }
@@ -355,7 +341,7 @@ app.post("/compras", async (req, res) => {
     totalIva,
     asignado,
     totalAsignado,
-    observaciones
+    observaciones,
   } = result.data;
 
   const query = `INSERT INTO Compras (
@@ -363,26 +349,26 @@ app.post("/compras", async (req, res) => {
     ) VALUES (?,?,?,?,?,?,?,?,?,?)`;
 
   try {
-
-    const [dbResult] = await db.promise().query(query, [
-      numero,
-      new Date(fechaFactura),
-      concepto,
-      proveedor,
-      tipo,
-      baseIva,
-      totalIva,
-      asignado,
-      totalAsignado,
-      observaciones
-    ]);
+    const [dbResult] = await db
+      .promise()
+      .query(query, [
+        numero,
+        new Date(fechaFactura),
+        concepto,
+        proveedor,
+        tipo,
+        baseIva,
+        totalIva,
+        asignado,
+        totalAsignado,
+        observaciones,
+      ]);
 
     return res.status(201).json({
       message: "Compra creada",
       insertId: dbResult.insertId,
-      affectedRows: dbResult.affectedRows
+      affectedRows: dbResult.affectedRows,
     });
-
   } catch (error) {
     console.error("Error en la consulta SQL: ", error.message);
     return res.status(500).json({ message: "There was an error in the query" });
@@ -410,7 +396,7 @@ app.put("/compras/:numero", async (req, res) => {
       totalIva,
       asignado,
       totalAsignado,
-      observaciones
+      observaciones,
     } = result.data;
 
     const updateQuery = `
@@ -427,24 +413,24 @@ app.put("/compras/:numero", async (req, res) => {
       WHERE numero = ?
     `;
 
-    await db.promise().query(updateQuery, [
-      new Date(fechaFactura),
-      concepto,
-      proveedor,
-      tipo,
-      baseIva,
-      totalIva,
-      asignado,
-      totalAsignado,
-      observaciones,
-      numero
-    ]);
+    await db
+      .promise()
+      .query(updateQuery, [
+        new Date(fechaFactura),
+        concepto,
+        proveedor,
+        tipo,
+        baseIva,
+        totalIva,
+        asignado,
+        totalAsignado,
+        observaciones,
+        numero,
+      ]);
 
     const compraActualizada = await findCompra(numero);
     return res.status(200).json(compraActualizada);
-
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error en la consulta SQL:", error.message);
     return res.status(500).json({ message: "There was an error in the query" });
   }
@@ -461,7 +447,9 @@ app.patch("/compras/:numero", async (req, res) => {
   const resultValidation = validator.validatePartialCompra(req.body);
 
   if (!resultValidation.success) {
-    return res.status(400).json({ error: JSON.parse(resultValidation.error.message) });
+    return res
+      .status(400)
+      .json({ error: JSON.parse(resultValidation.error.message) });
   }
 
   try {
@@ -484,7 +472,9 @@ app.patch("/compras/:numero", async (req, res) => {
       return res.status(400).json({ message: "No fields to update" });
     }
 
-    const updateQuery = `UPDATE Compras SET ${campos.join(", ")} WHERE numero = ?`;
+    const updateQuery = `UPDATE Compras SET ${campos.join(
+      ", "
+    )} WHERE numero = ?`;
     valores.push(numero);
 
     await db.promise().query(updateQuery, valores);
@@ -492,8 +482,7 @@ app.patch("/compras/:numero", async (req, res) => {
     // Se devuelve la compra que se ha actualizado.
     const compraActualizada = await findCompra(numero);
     return res.status(200).json(compraActualizada);
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error en la consulta SQL: ", error.message);
     return res.status(500).json({ message: "There was an error in the query" });
   }
@@ -510,9 +499,7 @@ app.delete("/compras/:numero", async (req, res) => {
 
     await db.promise().query("DELETE FROM Compras WHERE numero = ?", [numero]);
     return res.status(200).json(result);
-
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error en la consulta SQL: ", error.message);
     return res.status(500).json({ message: "There was an error in the query" });
   }
@@ -716,24 +703,31 @@ app.delete("/pedidos/:id", (req, res) => {
 app.get("/obras", (req, res) => {
   const query = `
     SELECT
-      o.cod,
-      o.descripcion,
-      o.tipo,
-      o.estado,
-      o.empresa,
-      o.fOferta,
-      o.obs,
-      o.r,
-      o.pP,
-      o.fP,
-      o.fecha_seg,
-      o.horasImputadas,
-      o.horasPrevistas,
-      o.totalmenteFacturadas,
-      o.fechaFacturacion
+      o.codigo_obra,
+      o.descripcion_obra,
+      o.tipo_obra,
+      tipoO.descripcion,
+      o.estado_obra,
+      te.descripcion_estado,
+      o.id_empresa,
+      e.nombre,
+      o.fecha_oferta,
+      o.observaciones,
+      o.observaciones_internas
     
     FROM 
-      obras o
+      obras AS o
+    
+    LEFT JOIN
+      empresas AS e ON o.id_empresa = e.id_empresa
+    
+    LEFT JOIN
+      tipoobra AS tipoO ON o.tipo_obra = tipoO.id_tipo
+    
+    LEFT JOIN
+      tipoestadosobras AS te ON o.estado_obra = te.codigo_estado
+    
+    ORDER BY o.codigo_obra;
   `;
 
   const values = [];
@@ -754,27 +748,33 @@ app.get("/obras/:cod", (req, res) => {
   const { cod } = req.params;
   const query = `
     SELECT
-      o.cod,
-      o.descripcion,
-      o.tipo,
-      o.estado,
-      o.empresa,
-      o.fOferta,
-      o.obs,
-      o.r,
-      o.pP,
-      o.fP,
-      o.fecha_seg,
-      o.horasImputadas,
-      o.horasPrevistas,
-      o.totalmenteFacturadas,
-      o.fechaFacturacion
+      o.codigo_obra,
+      o.descripcion_obra,
+      o.tipo_obra,
+      tipoO.descripcion,
+      o.estado_obra,
+      te.descripcion_estado,
+      o.id_empresa,
+      e.nombre,
+      o.fecha_oferta,
+      o.observaciones,
+      o.observaciones_internas
     
     FROM 
-      obras o
+      obras AS o
     
-    WHERE
-      cod = ?
+    LEFT JOIN
+      empresas AS e ON o.id_empresa = e.id_empresa
+    
+    LEFT JOIN
+      tipoobra AS tipoO ON o.tipo_obra = tipoO.id_tipo
+    
+    LEFT JOIN
+      tipoestadosobras AS te ON o.estado_obra = te.codigo_estado
+
+    WHERE o.codigo_obra = ?
+
+    ORDER BY o.codigo_obra;
   `;
   const values = [cod];
 
@@ -791,42 +791,29 @@ app.get("/obras/:cod", (req, res) => {
 
 // Añadir una obra
 app.post("/obras", (req, res) => {
+  /*
   const {
     cod,
     descripcion,
-    tipo,
-    estado,
-    empresa,
-    fOferta,
-    obs,
-    r,
-    pP,
-    fP,
     fecha_seg,
-    horasImputadas,
+    obraSuperior,
+    obrasSubordinadas,
+    tipoObra,
+    estadoObra,
+    fechaAlta,
+    usuarioAlta,
+    fechaFin,
+    fechaOferta,
     horasPrevistas,
-    totalmenteFacturadas,
-    fechaFacturacion,
+    gastoPrevisto,
+    importe,
+    viabilidad,
+    empresa,
+    contacto,
+    complejo,
+    observaciones,
+    observacionesInternas,
   } = req.body;
-  const values = [
-    cod,
-    descripcion,
-    tipo,
-    estado,
-    empresa,
-    fOferta,
-    obs,
-    r,
-    pP,
-    fP,
-    fecha_seg,
-    horasImputadas,
-    horasPrevistas,
-    totalmenteFacturadas,
-    fechaFacturacion,
-  ];
-  const query = `INSERT INTO obras (cod, descripcion, tipo, estado, empresa, fOferta, obs, r, pP, fP, fecha_seg, 
-                  horasImputadas, horasPrevistas, totalmenteFacturadas, fechaFacturacion) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
   db.query(query, values, (err) => {
     if (err) {
@@ -837,6 +824,7 @@ app.post("/obras", (req, res) => {
     }
     return res.status(201).json({ message: "Obra almacenada correctamente" });
   });
+  */
 });
 
 // Actualizar obra
@@ -912,7 +900,23 @@ app.delete("/obras/:cod", (req, res) => {
   });
 });
 
-// Iniciar el servidor
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
+// ------------------------- ENDPOINTS PARA LOS FORMS --------------------------- \\
+
+app.get("/api/tipos-obra", (req, res) => {
+  formServices.getTiposObra((err, result) => {
+    if (err) {
+      return res
+        .status(500)
+        .json({ message: `Error al obtener los tipos de obra - ${err}` });
+    }
+    res.json(result);
+  });
 });
+
+// Iniciar el servidor
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  });
+}
+
