@@ -73,7 +73,7 @@ function MainLayout() {
           <Route path="gestion-almacen" element={<GestionAlmacen />} /> 
           <Route path="gestion-pedidos" element={<GestionPedidos />} /> 
           <Route path="gestion-compras" element={<GestionCompras />} /> 
-          <Route path="gestion-obras/detalle/:cod" element={<DetalleObra />} /> 
+          <Route path="gestion-obras/detalle/:idObra" element={<DetalleObra />} /> 
         </Routes>
       </div>
     </div>
