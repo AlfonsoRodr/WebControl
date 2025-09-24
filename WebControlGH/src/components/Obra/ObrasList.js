@@ -29,10 +29,10 @@ const ObrasList = () => {
   const obrasPorPagina = 10; // Cantidad de obras por página
   const navigate = useNavigate(); // Hook para la navegación
 
-  // Funcion autoinvocada que hace fetch de todas las obras y las almacena en la variable allObras.
+  // Funcion que hace fetch de todas las obras y las almacena en la variable allObras.
   const fetchObras = async () => {
     try {
-      const endpoint = "http://localhost:3002/obras";
+      const endpoint = "http://localhost:3002/api/obra";
       const response = await axios.get(endpoint);
       setAllObras(response.data);
       setFilteredObras(response.data);
@@ -55,24 +55,32 @@ const ObrasList = () => {
       setFilteredObras(allObras);
     } else {
       const filtered = allObras.filter(
-        (obra) => obra.cod === searchTerm.toUpperCase()
+        (obra) => obra.codigo_obra === searchTerm.toUpperCase()
       );
       setFilteredObras(filtered);
+      setCurrentPage(1);
     }
   };
 
-  // Función para contar las obras cuya horas imputadas superan las horas previstas
+  // Función para contar las obras confirmadas cuya horas imputadas superan las horas previstas
   const countObrasSuperadas = (obras) => {
     const superadas = obras.filter(
-      (obra) => obra.horasImputadas > obra.horasPrevistas
+      (obra) =>
+        obra.desc_estado_obra === "Confirmada" &&
+        obra.horasTotal > obra.horas_previstas
     );
     setObrasSuperadas(superadas.length);
   };
 
+  // ------------ ESTA FUNCION DE MOMENTO NO FUNCIONA CORRECTAMENTE ------------ \\
+
   // Función para contar las obras confirmadas y totalmente facturadas hace más de 30 días
   const countObrasFacturadas = (obras) => {
     const facturadas = obras.filter((obra) => {
-      if (obra.estado === "Confirmada" && obra.totalmenteFacturadas) {
+      if (
+        obra.desc_estado_obra === "Confirmada" &&
+        (obra.pteFactura === obra.pteObra || obra.ptePedido === obra.pteObra)
+      ) {
         const facturacionDate = new Date(obra.fechaFacturacion);
         const today = new Date();
         const diffTime = Math.abs(today - facturacionDate);
@@ -83,6 +91,8 @@ const ObrasList = () => {
     });
     setObrasFacturadas(facturadas.length);
   };
+
+  // ----------------------------------------------------------------------------- \\
 
   // Función para contar las obras en seguimiento
   const countObrasSeguimiento = (obras) => {
@@ -145,6 +155,8 @@ const ObrasList = () => {
     console.log("Obras seleccionadas para imprimir:", selectedObras);
   };
 
+  // ------------------- VARIABLES PARA LA PAGINACION --------------------- \\
+
   // Índices de inicio y fin de las obras a mostrar en la página actual
   const indexOfLastObra = currentPage * obrasPorPagina;
   const indexOfFirstObra = indexOfLastObra - obrasPorPagina;
@@ -152,6 +164,21 @@ const ObrasList = () => {
   const obrasActuales = filteredObras.slice(indexOfFirstObra, indexOfLastObra);
   // Número total de páginas
   const totalPaginas = Math.ceil(filteredObras.length / obrasPorPagina);
+
+  // Número máximo de páginas a mostrar en la paginación
+  const maxPaginasVisibles = 10;
+
+  // Calcular el rango de páginas a mostrar (1-10, 11-20, 21-30, ...)
+  const startPage =
+    Math.floor((currentPage - 1) / maxPaginasVisibles) * maxPaginasVisibles + 1;
+  const endPage = Math.min(startPage + maxPaginasVisibles - 1, totalPaginas);
+
+  const paginasVisibles = [];
+  for (let i = startPage; i <= endPage; i++) {
+    paginasVisibles.push(i);
+  }
+
+  // ---------------------------------------------------------------------- \\
 
   return (
     <div className="obras-list">
@@ -161,12 +188,16 @@ const ObrasList = () => {
         <Form.Select>
           <option>Seleccionar obra...</option>
           {allObras
-            .filter((obra) => obra.horasImputadas > obra.horasPrevistas)
+            .filter(
+              (obra) =>
+                obra.desc_estado_obra === "Confirmada" &&
+                obra.horasTotal > obra.horas_previstas
+            )
             .map((obra, index) => (
               <option key={index} value={obra.cod}>
-                {obra.cod} - {obra.descripcion} - Gastos Generales:{" "}
-                {obra.gastosGenerales} - Horas Previstas: {obra.horasPrevistas}{" "}
-                - Horas Imputadas: {obra.horasImputadas}
+                {obra.codigo_obra} - {obra.descripcion_obra} - Gastos Generales:{" "}
+                {obra.gastoGeneral} - Horas Previstas: {obra.horas_previstas} -
+                Horas Imputadas: {obra.horasTotal}
               </option>
             ))}
         </Form.Select>
@@ -204,9 +235,10 @@ const ObrasList = () => {
           {allObras
             .filter((obra) => obra.fecha_seg !== null)
             .map((obra, index) => (
-              <option key={index} value={obra.cod}>
-                {obra.cod} - {obra.descripcion} - Fecha de Seguimiento:{" "}
-                {obra.fecha_seg} - Motivo: {obra.obs}
+              <option key={index} value={obra.codigo_obra}>
+                {obra.codigo_obra} - {obra.descripcion} - Fecha de Seguimiento:{" "}
+                {new Date(obra.fecha_seg).toLocaleDateString("es-ES")} - Motivo:{" "}
+                {obra.descripcion_seg}
               </option>
             ))}
         </Form.Select>
@@ -285,21 +317,35 @@ const ObrasList = () => {
                       onChange={() => handleSelectObra(obra.cod)}
                     />
                   </td>
-                  <td>{obra.cod}</td>
-                  <td>{obra.descripcion}</td>
-                  <td>{obra.tipo}</td>
-                  <td>{obra.estado}</td>
-                  <td>{obra.empresa}</td>
-                  <td>{obra.fOferta}</td>
-                  <td>{obra.obs}</td>
-                  <td>{obra.r}</td>
-                  <td>{obra.pP}</td>
-                  <td>{obra.fP}</td>
+                  <td>{obra.codigo_obra}</td>
+                  <td>{obra.descripcion_obra}</td>
+                  <td>{obra.desc_tipo_obra}</td>
+                  <td>{obra.desc_estado_obra}</td>
+                  <td>{obra.nombre_empresa}</td>
+                  <td>
+                    {obra.fecha_oferta
+                      ? new Date(obra.fecha_oferta).toLocaleDateString("es-ES")
+                      : "[No ofertada]"}
+                  </td>
+                  <td>
+                    {obra.observaciones
+                      ? obra.observaciones
+                      : "[Sin observaciones]"}
+                  </td>
+                  <td>{`${obra.rentabilidadPorcentaje ?? "-"} %`}</td>
+                  <td>
+                    {`${
+                      obra.pteObra ? (obra.ptePedido / obra.pteObra) * 100 : 0
+                    } %`}{" "}
+                  </td>
+                  <td>{`${
+                    obra.pteObra ? (obra.pteFactura / obra.pteObra) * 100 : 0
+                  } %`}</td>
                   <td>
                     <Button
                       variant="info"
                       onClick={() =>
-                        navigate(`/home/gestion-obras/detalle/${obra.cod}`)
+                        navigate(`/home/gestion-obras/detalle/${obra.id_obra}`)
                       }
                     >
                       Detalle
@@ -317,15 +363,23 @@ const ObrasList = () => {
 
         {/* Paginación */}
         <Pagination>
-          {Array.from({ length: totalPaginas }, (_, i) => (
+          <Pagination.First onClick={() => handlePageChange(1)} />
+          {startPage > 1 && (
+            <Pagination.Prev onClick={() => handlePageChange(startPage - 1)} />
+          )}
+          {paginasVisibles.map((page) => (
             <Pagination.Item
-              key={i}
-              active={i + 1 === currentPage}
-              onClick={() => handlePageChange(i + 1)}
+              key={page}
+              active={page === currentPage}
+              onClick={() => handlePageChange(page)}
             >
-              {i + 1}
+              {page}
             </Pagination.Item>
           ))}
+          {endPage < totalPaginas && (
+            <Pagination.Next onClick={() => handlePageChange(endPage + 1)} />
+          )}
+          <Pagination.Last onClick={() => handlePageChange(totalPaginas)} />
         </Pagination>
       </div>
     </div>

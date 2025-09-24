@@ -43,93 +43,68 @@ Content-Type: application/json
 
 DELETE http://localhost:3002/facturas/15
 
-############################ PEDIDOS ############################
-
-### GET pedidos
-GET http://localhost:3002/pedidos
-
-### GET pedido especifico
-GET http://localhost:3002/pedidos/PED-002
-
-### POST pedido
-POST http://localhost:3002/pedidos
-Content-Type: application/json
-
-{
-    "id": "PED-005",
-    "obra": "Reforma Local",
-    "cliente": "Bar Manolo",
-    "proveedor": "Suministros Paco",
-    "fecha": "2025-04-04",
-    "estado": "Pendiente",
-    "importe": 800.00,
-    "concepto":"Reformar baños",
-    "referencia": "REF-1450",
-    "observaciones": ""
-}
-
-### PUT pedido
-PUT http://localhost:3002/pedidos/PED-005
-Content-Type: application/json
-
-{
-    "estado": "Entregado",
-    "importe": "800.00",
-    "observaciones": "Finalizado"
-}
-
-### DELETE Pedido
-DELETE http://localhost:3002/pedidos/PED-005 
-
 ############################ OBRAS ############################
 
 ### GET Obras
-GET http://localhost:3002/obras
+GET http://localhost:3002/api/obra
 
 ### GET Obra específica
-GET http://localhost:3002/obras/0001
+GET http://localhost:3002/api/obra/4536
 
 ### POST Obra
-POST http://localhost:3002/obras
+POST http://localhost:3002/api/obra
 Content-Type: application/json
 
 {
-    "cod": "8821R9",
-    "descripcion": "Instalación de alarma",
-    "tipo": "Instalación",
-    "estado": "Pendiente",
-    "empresa": "Securitas Direct",
-    "fOferta": "2025-09-10",
-    "obs": "[-]",
-    "r": 95,
-    "pP": 85,
-    "fP": 80,
-    "fecha_seg": null,
-    "horasImputadas": 90,
-    "horasPrevistas": 100,
-    "totalmenteFacturadas": 0,
-    "fechaFacturacion": null
+    "cod": "000A",
+    "desc": "Instalación de alarma",
+    "fechaSeg": "2025-04-04",
+    "tipoObra": 3,
+    "facturable": 1,
+    "estadoObra": 4,
+    "fechaAlta": "2025-04-04",
+    "usuarioAlta": 4,
+    "fechaFin": "2025-06-04",
+    "fechaOferta": "2025-04-04",
+    "horasPrevistas": 30,
+    "gastoPrevisto": 200,
+    "importe": 100,
+    "viabilidad": 100,
+    "empresa": 2,
+    "contacto": 3,
+    "edificio": 39,
+    "observaciones": "Esta es una obra creada de prueba",
+    "observacionesInternas": "Esta es una obra creada de prueba"
 }
 
 ### Actualizar obra
-PUT http://localhost:3002/obras/8821R9
+PUT http://localhost:3002/api/obra/5301
 Content-Type: application/json
 
 {
-    "estado": "En Progreso",
-    "obs": "Estamos trabajando en ello",
-    "r": 95,
-    "pP": 85,
-    "fP": 80,
-    "fecha_seg": null,
-    "horasImputadas": 90,
-    "horasPrevistas": 100,
-    "totalmenteFacturadas": 0,
-    "fechaFacturacion": null
+    "cod": "000A",
+    "desc": "Instalación de alarma",
+    "fechaSeg": "2025-04-04",
+    "tipoObra": 3,
+    "facturable": 1,
+    "estadoObra": 4,
+    "fechaAlta": "2025-04-04",
+    "usuarioAlta": 4,
+    "fechaFin": "2025-06-04",
+    "fechaOferta": "2025-04-04",
+    "horasPrevistas": 30,
+    "gastoPrevisto": 200,
+    "importe": 100,
+    "viabilidad": 100,
+    "empresa": 2,
+    "contacto": 3,
+    "edificio": 39,
+    "observaciones": "Esto es una obra actualizada de prueba",
+    "observacionesInternas": "Esto es una obra actualizada de prueba"
 }
 
 ### Eliminar obra
-DELETE http://localhost:3002/obras/8821R9
+DELETE http://localhost:3002/api/obra/5301
 
 ### ENDPOINTS PARA LOS FORMS
 
@@ -191,3 +166,84 @@ Content-Type: application/json
 
 ### Borrar un producto
 DELETE http://localhost:3002/api/almacen/243
+
+###### ENDPOINTS CONTACTO #############
+
+### Obtener contacto por id de empresa
+GET http://localhost:3002/api/contacto/2
+
+###### ENDPOINTS EDIFICIO #############
+
+### Obtener edificios
+GET http://localhost:3002/api/edificio
+
+###### ENDPOINTS EMPRESA #############
+
+### Obtener empresas
+GET http://localhost:3002/api/empresa
+
+###### ENDPOINTS ESTADO OBRA #############
+
+### Obtener estados obra
+GET http://localhost:3002/api/estado-obra
+
+###### ENDPOINTS TIPO FACTURABLE #############
+
+### Obtener tipos facturable
+GET http://localhost:3002/api/tipo-facturable
+
+###### ENDPOINTS TIPO OBRA #############
+
+### Obtener tipos obra
+GET http://localhost:3002/api/tipo-obra
+
+###### ENDPOINTS USUARIO #############
+
+### Obtener usuarios
+GET http://localhost:3002/api/usuario
+
+###### ENDPOINTS RELACION - OBRAS #############
+
+### Obtener padre de una obra
+GET http://localhost:3002/api/relacion-obras/padre/2
+
+### Obtener hijas de una obra
+GET http://localhost:3002/api/relacion-obras/hijas/1
+
+### Establecer un padre a una obra
+POST http://localhost:3002/api/relacion-obras/padre
+Content-Type: application/json
+
+{
+    "idPadre": 1,
+    "idHija":2
+}
+
+### Establecer hijas a una obra
+POST http://localhost:3002/api/relacion-obras/hijas
+Content-Type: application/json
+
+{
+    "idPadre" : 1,
+    "idHijas" : [2,3,4]
+}
+
+### Borrar todas las relaciones de una obra
+DELETE http://localhost:3002/api/relacion-obras/1
+
+###### ENDPOINTS RENTABILIDAD #############
+
+### Obtener rentabilidad
+GET http://localhost:3002/api/rentabilidad/4536
+
+###### ENDPOINTS ECOPEDIDOS #############
+
+### Obtener pedidos asociados a una obra
+GET http://localhost:3002/api/ecoPedido/62
+
+###### ENDPOINTS ECOFACTURAS #############
+
+### Obtener facturas asociadas a una obra
+GET http://localhost:3002/api/ecoFactura/62
+
+
