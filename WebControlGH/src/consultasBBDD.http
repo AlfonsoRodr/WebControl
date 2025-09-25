@@ -246,4 +246,14 @@ GET http://localhost:3002/api/ecoPedido/62
 ### Obtener facturas asociadas a una obra
 GET http://localhost:3002/api/ecoFactura/62
 
+###### ENDPOINTS GASTOS #############
+
+### Obtener todos los gastos por validar
+GET http://localhost:3002/api/gastos/por-validar
+
+### Obtener todos los gastos por pagar
+GET http://localhost:3002/api/gastos/por-pagar
+
+### Obtener todos los gastos de una obra
+GET http://localhost:3002/api/gastos/obra/4536
 

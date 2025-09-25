@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { Button, Container, Form, Card, Accordion } from "react-bootstrap";
-import { obras } from "../obrasData";
 import axios from "axios";
 
 const DetalleObra = () => {
@@ -19,9 +18,12 @@ const DetalleObra = () => {
   const [facturasObra, setFacturasObra] = useState([]);
   // Estado para los pedidos asociados a una obra
   const [pedidosObra, setPedidosObra] = useState([]);
-
-  // Buscar la obra seleccionada
-  const obra = [];
+  // Estado para los gastos asociados a una obra
+  const [gastosObra, setGastosObra] = useState([]);
+  // Estado para los tipos de gastos
+  const [tiposGastos, setTiposGastos] = useState([]);
+  // Estado para mostrar la lista de gastos
+  const [mostrarGastos, setMostrarGastos] = useState(false);
 
   // ----------------------- FETCH DE DATOS ------------------------------- \\
 
@@ -70,6 +72,18 @@ const DetalleObra = () => {
     }
   };
 
+  // Fetch de los gastos asociados a una obra
+  const fetchGastos = async (idObra) => {
+    const endpoint = `http://localhost:3002/api/gastos/obra/${idObra}`;
+    try {
+      const res = await axios.get(endpoint);
+      setGastosObra(res.data);
+      getTiposGastos(res.data);
+    } catch (err) {
+      console.error(`Error al obtener los gastos de la obra - ${err}`);
+    }
+  };
+
   // ---------------------------------------------------------------------- \\
 
   useEffect(() => {
@@ -77,11 +91,14 @@ const DetalleObra = () => {
     fetchRentabilidad(idObra);
     fetchFacturas(idObra);
     fetchPedidos(idObra);
+    fetchGastos(idObra);
   }, []);
 
   if (!filteredObra) {
     return <h2>Obra no encontrada</h2>;
   }
+
+  // ----------------------------- HANDLERS y FUNCIONES AUXILIARES ----------------------- \\
 
   // Función para eliminar un pedido
   const handleDeletePedido = (codigoPedido) => {
@@ -92,6 +109,19 @@ const DetalleObra = () => {
   const handleDeleteFactura = (codigoFactura) => {
     /*setFacturas(facturas.filter((factura) => factura.codigo !== codigoFactura));*/
   };
+
+  // Funcion para obtener los tipos de gastos
+  const getTiposGastos = (gastosObra) => {
+    const tiposUnicos = [];
+    gastosObra.forEach((gasto) => {
+      if (gasto.tipo_gasto && !tiposUnicos.includes(gasto.tipo_gasto)) {
+        tiposGastos.push(gasto.tipo_gasto);
+      }
+    });
+    setTiposGastos(tiposUnicos);
+  };
+
+  // -------------------------------------------------------------------------------------- \\
 
   return (
     <Container className="mt-4">
@@ -340,9 +370,9 @@ const DetalleObra = () => {
             <p>
               <strong>Fecha Hora Final:</strong>{" "}
               {rentabilidadObra.fechaHoraFinal
-                ? new Date(
-                    rentabilidadObra.fechaHoraFinal
-                  ).toLocaleDateString("es-Es")
+                ? new Date(rentabilidadObra.fechaHoraFinal).toLocaleDateString(
+                    "es-Es"
+                  )
                 : "Sin especificar"}
             </p>
             <div className="mt-3">
@@ -364,9 +394,9 @@ const DetalleObra = () => {
             <p>
               <strong>Fecha Hora Extra Final:</strong>{" "}
               {rentabilidadObra.fechaGastoFinal
-                ? new Date(
-                    rentabilidadObra.fechaGastoFinal
-                  ).toLocaleDateString("es-Es")
+                ? new Date(rentabilidadObra.fechaGastoFinal).toLocaleDateString(
+                    "es-Es"
+                  )
                 : "Sin especificar"}
             </p>
             <div className="mt-3">
@@ -380,11 +410,6 @@ const DetalleObra = () => {
 
             {/* Gastos Generales */}
             <h5 className="mt-4">Gastos Generales</h5>
-            <Form.Check
-              type="checkbox"
-              label="Mostrar listado de gastos"
-              className="mb-3"
-            />
             <p>
               <strong>Fecha Gasto Inicial:</strong>{" "}
               {rentabilidadObra.fechaGastoInicial
@@ -396,11 +421,71 @@ const DetalleObra = () => {
             <p>
               <strong>Fecha Gasto Final:</strong>{" "}
               {rentabilidadObra.fechaGastoFinal
-                ? new Date(
-                    rentabilidadObra.fechaGastoFinal
-                  ).toLocaleDateString("es-Es")
+                ? new Date(rentabilidadObra.fechaGastoFinal).toLocaleDateString(
+                    "es-Es"
+                  )
                 : "Sin especificar"}
             </p>
+            <Form.Check
+              type="checkbox"
+              label="Mostrar listado de gastos"
+              className="mb-3"
+              checked={mostrarGastos}
+              onChange={() => setMostrarGastos((prev) => !prev)}
+            />
+
+            {/* LISTADO DE GASTOS */}
+            {mostrarGastos && (
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>F. Gasto</th>
+                    <th>Usu</th>
+                    <th>Tipo</th>
+                    <th>Validado</th>
+                    <th>UsuV</th>
+                    <th>Visa</th>
+                    <th>Pagado</th>
+                    <th>Cant.</th>
+                    <th>Importe Uni.</th>
+                    <th>Total</th>
+                    <th>Accion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {gastosObra.length > 0 ? (
+                    gastosObra.map((gasto, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          {new Date(gasto.fecha_gasto).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{gasto.usuario_alta}</td>
+                        <td>{gasto.tipo_gasto}</td>
+                        <td>{gasto.fecha_validacion}</td>
+                        <td>{gasto.usuario_validacion}</td>
+                        <td>{gasto.pagado_visa ? "[SÍ]" : "[NO]"}</td>
+                        <td>{gasto.fecha_pago}</td>
+                        <td>{gasto.cantidad}</td>
+                        <td>{gasto.importe}</td>
+                        <td>{gasto.importe * gasto.cantidad}</td>
+                        <td>
+                          <Button variant="info" className="me-2">
+                            Detalle
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4">No hay gastos asociados</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+
             <div className="mt-3">
               <strong>Totales Gastos Generales</strong>
               <p>Kilómetros Coche Empresa: Sin incluir</p>

@@ -15,6 +15,7 @@ const obraRouter = require("./routes/obraRoutes.js");
 const rentabilidadRouter = require("./routes/rentabilidadRoutes.js");
 const ecoFacturaRouter = require("./routes/ecoFacturaRoutes.js");
 const ecoPedidoRouter = require("./routes/ecoPedidoRoutes.js");
+const gastosRouter = require("./routes/gastoRoutes.js");
 
 const app = express();
 const PORT = 3002;
@@ -38,6 +39,7 @@ app.use("/api/obra", obraRouter);
 app.use("/api/rentabilidad", rentabilidadRouter);
 app.use("/api/ecoPedido", ecoPedidoRouter);
 app.use("/api/ecoFactura", ecoFacturaRouter);
+app.use("/api/gastos", gastosRouter);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
