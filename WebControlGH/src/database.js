@@ -1,6 +1,16 @@
-const mysql = require("mysql2");
+const mysql = require("mysql2/promise");
 
-const db = mysql.createConnection({
+/*
+const db = await mysql.createConnection({
+  host: "sldk368.piensasolutions.com",
+  user: "qaic837",
+  port: 3306,
+  password: "Abaco2023.",
+  database: "qaic837",
+});
+*/
+
+const db = mysql.createPool({
   host: "sldk368.piensasolutions.com",
   user: "qaic837",
   port: 3306,
@@ -8,6 +18,7 @@ const db = mysql.createConnection({
   database: "qaic837",
 });
 
+/*
 db.connect((err) => {
   if (err) {
     console.error("Error al conectar con la base de datos:", err);
@@ -15,5 +26,6 @@ db.connect((err) => {
   }
   console.log("Conectado a la base de datos MySQL");
 });
+*/
 
 module.exports = { db };

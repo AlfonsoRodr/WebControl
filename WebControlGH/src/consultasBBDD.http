@@ -1,7 +1,7 @@
 ############################ FACTURAS ############################
 
 ### GET FACTURAS
-GET http://localhost:3002/facturas/
+GET http://localhost:3002/api/facturas
 
 ### GET FACTURA
 GET http://localhost:3002/facturas/1/detalles

@@ -1,4 +1,4 @@
-import { db } from "../database";
+import { db } from "../database.js";
 import { validateFactura, validatePartialFactura } from "../validations/facturasValidator.mjs";
 
 export class FacturasModel {

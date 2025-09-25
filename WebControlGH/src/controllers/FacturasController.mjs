@@ -1,4 +1,4 @@
-import { FacturasModel } from "../models/FacturasModel.js";
+import { FacturasModel } from "../models/Facturas.mjs";
 
 export class FacturasController {
 
