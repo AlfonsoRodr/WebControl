@@ -3,6 +3,7 @@ const cors = require("cors");
 
 // Enrutadores
 const almacenRouter = require("./routes/almacenRoutes.js");
+const { facturasRouter } = require("./routes/FacturasRouter.mjs");
 const contactoRouter = require("./routes/contactoRoutes.js");
 const edificioRouter = require("./routes/edificioRoutes.js");
 const empresaRouter = require("./routes/empresaRoutes.js");
@@ -27,6 +28,7 @@ app.use(express.json());
 
 // Configuramos los enrutadores para que responda a las URLs especificadas
 app.use("/api/almacen", almacenRouter);
+app.use("/api/facturas", facturasRouter);
 app.use("/api/contacto", contactoRouter);
 app.use("/api/edificio", edificioRouter);
 app.use("/api/empresa", empresaRouter);

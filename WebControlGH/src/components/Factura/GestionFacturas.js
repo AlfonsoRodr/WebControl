@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
 import {
-  Collapse,
-  Form,
-  Button,
-  Table,
-  Pagination,
-  Container,
-  Row,
-  Col,
-  InputGroup,
-  FormControl,
+	Collapse,
+	Form,
+	Button,
+	Table,
+	Pagination,
+	Container,
+	Row,
+	Col
 } from "react-bootstrap";
 
 import { useNavigate } from "react-router-dom";
@@ -19,428 +17,489 @@ import axios from "axios";
 let allFacturas = null;
 
 function GestionFacturas() {
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    fechaInicio: "",
-    fechaFin: "",
-    pendientePago: "",
-    obra: "",
-    pedido: "",
-    origenFactura: "",
-  });
+	const [open, setOpen] = useState(false);
+	const [formData, setFormData] = useState({
+		idObra: "",
+		idFacturasCompras: "",
+		importe: "",
+		fechaAlta: "",
+		codigoUsuarioAlta: "",
+        fechaActualizacion: "",
+        fechaBaja: "",
+        codigoUsuarioBaja: "",
+        observaciones: "",
+        version: ""
+	});
 
-  const [filteredFacturas, setFilteredFacturas] = useState([]);
-  const [currentPage, setCurrentPage] = useState(1);
-  const facturasPorPagina = 5;
-  const [selectedFacturas, setSelectedFacturas] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
-  const navigate = useNavigate();
+	const [filteredFacturas, setFilteredFacturas] = useState([]);
+	const [currentPage, setCurrentPage] = useState(1);
+	const facturasPorPagina = 5;
+	const [selectedFacturas, setSelectedFacturas] = useState([]);
+	const [selectAll, setSelectAll] = useState(false);
+	const navigate = useNavigate();
 
-  useEffect(() => {
-    fetchFacturas();
-  }, []);
+	useEffect(() => {
+		fetchFacturas();
+	}, []);
 
-  const fetchFacturas = async () => {
-    const endpoint = "http://localhost:3002/facturas";
-    try {
-      const res = await axios.get(endpoint);
-      allFacturas = res.data;
-      setFilteredFacturas(res.data);
-    } catch (err) {
-      console.error("Error al obtener facturas", err);
-    }
-  };
+	const fetchFacturas = async () => {
+		const endpoint = "http://localhost:3002/api/facturas";
+		try {
+			const res = await axios.get(endpoint);
+			allFacturas = res.data;
+			setFilteredFacturas(res.data);
+		}
+		catch (err) {
+			console.error("Error al obtener facturas", err);
+		}
+	};
 
-  const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value,
-    }));
-  };
+	const handleChange = (e) => {
+		setFormData((prev) => ({
+			...prev,
+			[e.target.name]: e.target.value,
+		}));
+	};
 
-  const handleNuevaFactura = () => {
-    navigate("/home/nueva-factura");
-  };
+	const handleNuevaFactura = () => {
+		navigate("/home/nueva-factura");
+	};
 
-  // Función para manejar la copia de obras seleccionadas
-  const handleCopiarFacturas = () => {
-    if (selectedFacturas.length === 0) {
-      alert("Por favor, selecciona al menos una factura para copiar.");
-      return;
-    }
-    console.log("Facturas seleccionadas para copiar:", selectedFacturas);
-  };
+	// Función para manejar la copia de obras seleccionadas
+	const handleCopiarFacturas = () => {
+		if (selectedFacturas.length === 0) {
+			alert("Por favor, selecciona al menos una factura para copiar.");
+			return;
+		}
+		console.log("Facturas seleccionadas para copiar:", selectedFacturas);
+	};
 
-  // Funcion para borrar facturas
-  const deleteFactura = async (selectedFacturas) => {
-    try {
-      const deletePromises = Array.from(selectedFacturas).map(async (id) => {
-        await axios.delete(`http://localhost:3002/facturas/${id}`);
-        console.log(`Factura ${id} eliminada satisfactoriamente`);
-      });
-      await Promise.all(deletePromises);
-      // Si todo ha ido bien devolvemos true
-      return true;
-    } catch (error) {
-      console.log("Error al eliminar facturas");
-      // Si ha habido un fallo en el borrado de alguna de las facturas
-      // devolvemos false
-      return false;
-    }
-  };
+	// Funcion para borrar facturas
+	const deleteFactura = async (selectedFacturas) => {
+		try {
+			const deletePromises = Array.from(selectedFacturas).map(async (id) => {
+				await axios.delete(`http://localhost:3002/api/facturas/${id}`);
+				console.log(`Factura ${id} eliminada satisfactoriamente`);
+			});
+			await Promise.all(deletePromises);
+			// Si todo ha ido bien devolvemos true
+			return true;
+		} 
+		catch (error) {
+			console.log("Error al eliminar facturas");
+			// Si ha habido un fallo en el borrado de alguna de las facturas
+			// devolvemos false
+			return false;
+		}
+	};
 
-  // Funcion para manejar la baja de una factura
-  const handleBajaFactura = async () => {
-    if (selectedFacturas.length === 0) {
-      alert("Por favor, selecciona al menos una factura para eliminar.");
-      return;
-    }
-    if (
-      window.confirm("¿Estás seguro de eliminar las facturas seleccionadas?")
-    ) {
-      try {
-        const success = await deleteFactura(selectedFacturas);
-        if (success) {
-          // Volvemos a hacer un fetch de las facturas
-          await fetchFacturas();
+	// Funcion para manejar la baja de una factura
+	const handleBajaFactura = async () => {
+		if (selectedFacturas.length === 0) {
+			alert("Por favor, selecciona al menos una factura para eliminar.");
+			return;
+		}
+		if (window.confirm("¿Estás seguro de eliminar las facturas seleccionadas?")) {
+			try {
+				const success = await deleteFactura(selectedFacturas);
+				if (success) {
+					// Volvemos a hacer un fetch de las facturas
+					await fetchFacturas();
 
-          // Importante limpiar la seleccion de facturas porque
-          // sino el componente ImprimirFacturas da un error puntual al imprimir
-          // factura justo después de haber eliminado
-          setSelectedFacturas([]);
+					// Importante limpiar la seleccion de facturas porque
+					// sino el componente ImprimirFacturas da un error puntual al imprimir
+					// factura justo después de haber eliminado
+					setSelectedFacturas([]);
 
-          alert("Facturas eliminadas correctamente");
-        } else {
-          alert("Error al eliminar algunas facturas");
-        }
-      } catch (error) {
-        console.error("Error en el proceso de borrado", error);
-      }
-    }
-  };
+					alert("Facturas eliminadas correctamente");
+				} else {
+					alert("Error al eliminar algunas facturas");
+				}
+			} catch (error) {
+				console.error("Error en el proceso de borrado", error);
+			}
+		}
+	};
 
-  // Función para manejar la impresión de obras seleccionadas
-  const handleImprimirFacturas = () => {
-    if (selectedFacturas.length === 0) {
-      alert("Por favor, selecciona al menos una factura para imprimir.");
-      return;
-    }
-    console.log(
-      "GestionFacturas: Facturas seleccionadas para imprimir",
-      selectedFacturas
-    );
-    navigate("/home/imprimir-factura", {
-      state: { selectedFacturas: selectedFacturas },
-    });
-  };
+	// Función para manejar la impresión de obras seleccionadas
+	const handleImprimirFacturas = () => {
+		if (selectedFacturas.length === 0) {
+			alert("Por favor, selecciona al menos una factura para imprimir.");
+			return;
+		}
+		console.log(
+			"GestionFacturas: Facturas seleccionadas para imprimir",
+			selectedFacturas
+		);
+		navigate("/home/imprimir-factura", {
+			state: { selectedFacturas: selectedFacturas },
+		});
+	};
 
-  const handleCheckboxChange = (facturaId) => {
-    setSelectedFacturas((prevSelected) => {
-      if (prevSelected.includes(facturaId)) {
-        return prevSelected.filter((id) => id !== facturaId);
-      } else {
-        return [...prevSelected, facturaId];
-      }
-    });
-  };
+	const handleCheckboxChange = (facturaId) => {
+		setSelectedFacturas((prevSelected) => {
+			if (prevSelected.includes(facturaId)) {
+				return prevSelected.filter((id) => id !== facturaId);
+			} else {
+				return [...prevSelected, facturaId];
+			}
+		});
+	};
 
-  const handleSearch = () => {
-    let filtered = allFacturas;
+	const handleSearch = () => {
+		let filtered = allFacturas;
 
-    if (formData.fechaInicio) {
-      filtered = filtered.filter(
-        (factura) =>
-          new Date(factura.fecha_cabecera) >= new Date(formData.fechaInicio)
-      );
-    }
+		if (formData.fechaInicio) {
+			filtered = filtered.filter(
+				(factura) =>
+					new Date(factura.fecha_cabecera) >= new Date(formData.fechaInicio)
+			);
+		}
 
-    if (formData.fechaFin) {
-      filtered = filtered.filter(
-        (factura) =>
-          new Date(factura.fecha_cabecera) <= new Date(formData.fechaFin)
-      );
-    }
+		if (formData.fechaFin) {
+			filtered = filtered.filter(
+				(factura) =>
+					new Date(factura.fecha_cabecera) <= new Date(formData.fechaFin)
+			);
+		}
 
-    if (formData.pendientePago) {
-      filtered = filtered.filter((factura) =>
-        formData.pendientePago === "si"
-          ? factura.cobrado === 0
-          : factura.cobrado === 1
-      );
-    }
+		if (formData.pendientePago) {
+			filtered = filtered.filter((factura) =>
+				formData.pendientePago === "si"
+					? factura.cobrado === 0
+					: factura.cobrado === 1
+			);
+		}
 
-    if (formData.obra) {
-      filtered = filtered.filter((factura) =>
-        factura.obra.includes(formData.obra)
-      );
-    }
+		if (formData.obra) {
+			filtered = filtered.filter((factura) =>
+				factura.obra.includes(formData.obra)
+			);
+		}
 
-    if (formData.pedido) {
-      filtered = filtered.filter((factura) =>
-        String(factura.pedido_pos).includes(formData.pedido)
-      );
-    }
+		if (formData.pedido) {
+			filtered = filtered.filter((factura) =>
+				String(factura.pedido_pos).includes(formData.pedido)
+			);
+		}
 
-    if (formData.origenFactura) {
-      filtered = filtered.filter((factura) =>
-        factura.origen.includes(formData.origenFactura)
-      );
-    }
+		if (formData.origenFactura) {
+			filtered = filtered.filter((factura) =>
+				factura.origen.includes(formData.origenFactura)
+			);
+		}
 
-    setFilteredFacturas(filtered);
-  };
+		setFilteredFacturas(filtered);
+	};
 
-  const handleSelectAll = () => {
-    setSelectAll(!selectAll);
-    if (!selectAll) {
-      setSelectedFacturas(filteredFacturas.map((factura) => factura.id));
-    } else {
-      setSelectedFacturas([]);
-    }
-  };
+	const handleSelectAll = () => {
+		setSelectAll(!selectAll);
+		if (!selectAll) {
+			setSelectedFacturas(filteredFacturas.map((factura) => factura.id));
+		} else {
+			setSelectedFacturas([]);
+		}
+	};
 
-  const indexOfLastFactura = currentPage * facturasPorPagina;
-  const indexOfFirstFactura = indexOfLastFactura - facturasPorPagina;
-  const facturasActuales = filteredFacturas.slice(
-    indexOfFirstFactura,
-    indexOfLastFactura
-  );
-  const totalPaginas = Math.ceil(filteredFacturas.length / facturasPorPagina);
+	const indexOfLastFactura = currentPage * facturasPorPagina;
+	const indexOfFirstFactura = indexOfLastFactura - facturasPorPagina;
+	const facturasActuales = filteredFacturas.slice(
+		indexOfFirstFactura,
+		indexOfLastFactura
+	);
+	const totalPaginas = Math.ceil(filteredFacturas.length / facturasPorPagina);
 
-  const handlePageChange = (pageNumber) => {
-    setCurrentPage(pageNumber);
-  };
+	const handlePageChange = (pageNumber) => {
+		setCurrentPage(pageNumber);
+	};
 
-  return (
-    <div className="gestion-facturas">
-      <h3>Listado de Facturas</h3>
+	return (
+		<div className="gestion-facturas">
+			<h3>Listado de Facturas</h3>
 
-      <div style={{ textAlign: "left" }}>
-        <Button
-          onClick={() => setOpen(!open)}
-          aria-controls="criterios-collapse"
-          aria-expanded={open}
-          style={{
-            backgroundColor: "#cce5ff",
-            color: "#004085",
-            border: "none",
-            marginBottom: "1rem",
-          }}
-        >
-          Criterios de Búsqueda
-        </Button>
-      </div>
+			<div style={{ textAlign: "left" }}>
+				<Button
+					onClick={() => setOpen(!open)}
+					aria-controls="criterios-collapse"
+					aria-expanded={open}
+					style={{
+						backgroundColor: "#cce5ff",
+						color: "#004085",
+						border: "none",
+						marginBottom: "1rem",
+					}}
+				>
+					Criterios de Búsqueda
+				</Button>
+			</div>
 
-      <Collapse in={open}>
-        <div
-          id="criterios-collapse"
-          className="mb-4 p-3 border rounded"
-          style={{ backgroundColor: "#e9f5ff" }}
-        >
-          <Form>
-            <div className="row">
-              <div className="col-md-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>
-                    Fecha Inicio Factura
-                  </Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="fechaInicio"
-                    value={formData.fechaInicio}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </div>
+			<Collapse in={open}>
+				<div
+					id="criterios-collapse"
+					className="mb-4 p-3 border rounded"
+					style={{ backgroundColor: "#e9f5ff" }}
+				>
+					<Form>
+						<div className="row">
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Obra
+									</Form.Label>
+									<Form.Control
+										type="text"
+										name="idObra"
+										value={formData.idObra}
+										onChange={handleChange}
+									/>
+								</Form.Group>
+							</div>
 
-              <div className="col-md-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>
-                    Fecha Fin Factura
-                  </Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="fechaFin"
-                    value={formData.fechaFin}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </div>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										ID Factura Compra
+									</Form.Label>
+									<Form.Control
+										type="text"
+										name="idFacturaCompra"
+										value={formData.idFacturasCompras}
+										onChange={handleChange}
+									/>
+								</Form.Group>
+							</div>
 
-              <div className="col-md-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>
-                    Pendiente de Pago
-                  </Form.Label>
-                  <Form.Select
-                    name="pendientePago"
-                    value={formData.pendientePago}
-                    onChange={handleChange}
-                  >
-                    <option value="">Selecciona</option>
-                    <option value="si">Sí</option>
-                    <option value="no">No</option>
-                  </Form.Select>
-                </Form.Group>
-              </div>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Importe
+									</Form.Label>
+									<Form.Select
+										name="importe"
+										value={formData.importe}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
 
-              <div className="col-md-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>Obra</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="obra"
-                    value={formData.obra}
-                    onChange={handleChange}
-                    placeholder="Escribe el nombre de la obra"
-                  />
-                </Form.Group>
-              </div>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Fecha de Alta
+									</Form.Label>
+									<Form.Select
+										type="date"
+										name="fechaAlta"
+										value={formData.fechaAlta}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
 
-              <div className="col-md-3 mt-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>Pedido</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="pedido"
-                    value={formData.pedido}
-                    onChange={handleChange}
-                    placeholder="Código de pedido"
-                  />
-                </Form.Group>
-              </div>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Código Usuario Alta
+									</Form.Label>
+									<Form.Select
+										name="codigoUsuarioAlta"
+										value={formData.codigoUsuarioAlta}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
 
-              <div className="col-md-3 mt-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>
-                    Origen Factura
-                  </Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="origenFactura"
-                    value={formData.origenFactura}
-                    onChange={handleChange}
-                    placeholder="Origen de factura"
-                  />
-                </Form.Group>
-              </div>
-            </div>
-          </Form>
-        </div>
-      </Collapse>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Fecha de Actualización
+									</Form.Label>
+									<Form.Select
+										type="date"
+										name="fechaActualizacion"
+										value={formData.fechaActualizacion}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
 
-      <div className="d-flex mb-4">
-        <Form.Control
-          type="text"
-          placeholder="Busque por nombre y descripción"
-          className="me-2"
-          style={{ maxWidth: "400px" }}
-        />
-        <Button
-          variant="primary"
-          onClick={handleSearch}
-          style={{ width: "auto" }}
-        >
-          Buscar
-        </Button>
-      </div>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Fecha de Baja
+									</Form.Label>
+									<Form.Select
+										type="date"
+										name="fechaBaja"
+										value={formData.fechaBaja}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
 
-      <Container>
-        <Row className="mb-3">
-          <Col md={4} className="text-end">
-            <Button onClick={handleNuevaFactura} className="custom-button">
-              Nueva Factura
-            </Button>
-            <Button onClick={handleBajaFactura} className="custom-button">
-              Baja Factura
-            </Button>
-            <Button onClick={handleCopiarFacturas} className="custom-button">
-              Importar Facturas desde DQEMS
-            </Button>
-            <Button onClick={handleImprimirFacturas} className="custom-button">
-              Imprimir Facturas
-            </Button>
-          </Col>
-        </Row>
-      </Container>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Código Usuario de Baja
+									</Form.Label>
+									<Form.Select
+										name="codigoUsuarioBaja"
+										value={formData.codigoUsuarioBaja}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
 
-      <Table striped bordered hover>
-        <thead>
-          <tr>
-            <th>
-              <Form.Check
-                type="checkbox"
-                checked={selectAll}
-                onChange={handleSelectAll}
-              />
-            </th>
-            <th>Orig.</th>
-            <th>Factura-Pos</th>
-            <th>Pedido-Pos</th>
-            <th>Obra</th>
-            <th>Fecha</th>
-            <th>ConceptoF</th>
-            <th>ConceptoL</th>
-            <th>Cobrado?</th>
-            <th>Importe</th>
-            <th>Obs.F.Import</th>
-            <th>Acción</th>
-          </tr>
-        </thead>
-        <tbody>
-          {facturasActuales.length > 0 ? (
-            facturasActuales.map((factura, index) => (
-              <tr key={index}>
-                <td>
-                  <Form.Check
-                    type="checkbox"
-                    checked={selectedFacturas.includes(factura.id)}
-                    onChange={() => handleCheckboxChange(factura.id)}
-                  />
-                </td>
-                <td>{factura.origen}</td>
-                <td>{factura.factura_pos}</td>
-                <td>{factura.pedido_pos}</td>
-                <td>{factura.obra}</td>
-                <td>{factura.fecha_cabecera}</td>
-                <td>{factura.concepto_f}</td>
-                <td>{factura.concepto_l}</td>
-                <td>{factura.cobrado === 1 ? "Sí" : "[NO]"}</td>
-                <td>{factura.importe}</td>
-                <td>{factura.obs_imp}</td>
-                <td>
-                  <Button
-                    variant="info"
-                    onClick={() =>
-                      navigate(`/home/gestion-facturas/detalle/${factura.id}`)
-                    }
-                  >
-                    Detalle
-                  </Button>
-                </td>
-              </tr>
-            ))
-          ) : (
-            <tr>
-              <td colSpan="12">No se encontraron facturas</td>
-            </tr>
-          )}
-        </tbody>
-      </Table>
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Observaciones
+									</Form.Label>
+									<Form.Select
+										type="text"
+										name="observaciones"
+										value={formData.observaciones}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
 
-      <Pagination>
-        {Array.from({ length: totalPaginas }, (_, i) => (
-          <Pagination.Item
-            key={i}
-            active={i + 1 === currentPage}
-            onClick={() => handlePageChange(i + 1)}
-          >
-            {i + 1}
-          </Pagination.Item>
-        ))}
-      </Pagination>
-    </div>
-  );
+							<div className="col-md-3">
+								<Form.Group>
+									<Form.Label style={{ color: "black" }}>
+										Versión
+									</Form.Label>
+									<Form.Select
+										name="version"
+										value={formData.version}
+										onChange={handleChange}
+									>
+									</Form.Select>
+								</Form.Group>
+							</div>
+						</div>
+					</Form>
+				</div>
+			</Collapse>
+
+			<div className="d-flex mb-4">
+				<Form.Control
+					type="text"
+					placeholder="Busque por nombre y descripción"
+					className="me-2"
+					style={{ maxWidth: "400px" }}
+				/>
+				<Button
+					variant="primary"
+					onClick={handleSearch}
+					style={{ width: "auto" }}
+				>
+					Buscar
+				</Button>
+			</div>
+
+			<Container>
+				<Row className="mb-3">
+					<Col md={4} className="text-end">
+						<Button onClick={handleNuevaFactura} className="custom-button">
+							Nueva Factura
+						</Button>
+						<Button onClick={handleBajaFactura} className="custom-button">
+							Baja Factura
+						</Button>
+						<Button onClick={handleCopiarFacturas} className="custom-button">
+							Importar Facturas desde DQEMS
+						</Button>
+						<Button onClick={handleImprimirFacturas} className="custom-button">
+							Imprimir Facturas
+						</Button>
+					</Col>
+				</Row>
+			</Container>
+
+			<Table striped bordered hover>
+				<thead>
+					<tr>
+						<th>
+							<Form.Check
+								type="checkbox"
+								checked={selectAll}
+								onChange={handleSelectAll}
+							/>
+						</th>
+						<th>Obra</th>
+						<th>Facturas Compras</th>
+						<th>Importe</th>
+						<th>Fecha Alta</th>
+						<th>Usuario Alta</th>
+						<th>Fecha Actu</th>
+						<th>Fecha Baja</th>
+						<th>Usuario Baja</th>
+						<th>Observaciones</th>
+						<th>Versión</th>
+					</tr>
+				</thead>
+				<tbody>
+					{facturasActuales.length > 0 ? (
+						facturasActuales.map((factura, index) => (
+							<tr key={index}>
+								<td>
+									<Form.Check
+										type="checkbox"
+										checked={selectedFacturas.includes(factura.id)}
+										onChange={() => handleCheckboxChange(factura.id)}
+									/>
+								</td>
+								<td>{formData.idObra}</td>
+								<td>{formData.idFacturasCompras}</td>
+								<td>{formData.importe}</td>
+								<td>{formData.fechaAlta}</td>
+								<td>{formData.codigoUsuarioAlta}</td>
+								<td>{formData.fechaActualizacion}</td>
+								<td>{formData.fechaBaja}</td>
+								<td>{formData.codigoUsuarioBaja}</td>
+								<td>{formData.observaciones}</td>
+								<td>{formData.version}</td>
+								<td>
+									<Button
+										variant="info"
+										onClick={() =>
+											navigate(`/home/gestion-facturas/detalle/${factura.id}`)
+										}
+									>
+										Detalle
+									</Button>
+								</td>
+							</tr>
+						))
+					) : (
+						<tr>
+							<td colSpan="12">No se encontraron facturas</td>
+						</tr>
+					)}
+				</tbody>
+			</Table>
+
+			<Pagination>
+				{Array.from({ length: totalPaginas }, (_, i) => (
+					<Pagination.Item
+						key={i}
+						active={i + 1 === currentPage}
+						onClick={() => handlePageChange(i + 1)}
+					>
+						{i + 1}
+					</Pagination.Item>
+				))}
+			</Pagination>
+		</div>
+	);
 }
 
 export default GestionFacturas;
