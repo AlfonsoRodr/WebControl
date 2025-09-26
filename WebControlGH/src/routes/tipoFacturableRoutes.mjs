@@ -7,3 +7,5 @@ export const tiposFacRouter = Router();
 tiposFacRouter.get("/", TipoFacturableController.getAll);
 
 tiposFacRouter.use(errorHandler);
+
+export default tiposFacRouter;

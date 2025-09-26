@@ -7,3 +7,5 @@ export const tipoObRouter = Router();
 tipoObRouter.get("/", TipoObraController.getAll);
 
 tipoObRouter.use(errorHandler);
+
+export default tipoObRouter;

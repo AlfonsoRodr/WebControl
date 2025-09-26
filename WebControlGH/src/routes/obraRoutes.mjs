@@ -11,3 +11,5 @@ obraRouter.put("/:idObra", ObraController.update);
 obraRouter.delete("/:idObra", ObraController.delete);
 
 obraRouter.use(errorHandler);
+
+export default obraRouter;

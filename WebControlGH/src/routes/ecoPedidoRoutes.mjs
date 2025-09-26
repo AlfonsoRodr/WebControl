@@ -1,5 +1,5 @@
 import express from "express";
-import * as ecoPedidoController from "../controllers/ecoPedidoController.js";
+import * as ecoPedidoController from "../controllers/ecoPedidoController.mjs";
 
 const router = express.Router();
 

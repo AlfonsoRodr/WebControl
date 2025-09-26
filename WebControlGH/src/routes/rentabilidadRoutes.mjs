@@ -8,3 +8,4 @@ rentabilidadRouter.get("/:idObra", RentabilidadController.getByIdObra);
 
 rentabilidadRouter.use(errorHandler);
 
+export default rentabilidadRouter;

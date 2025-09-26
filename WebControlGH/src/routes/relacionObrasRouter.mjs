@@ -11,3 +11,5 @@ relacionObrasRouter.post("/hijas", RelacionObrasController.setObrasHijas);
 
 relacionObrasRouter.use(errorHandler);
 
+export default relacionObrasRouter;
+

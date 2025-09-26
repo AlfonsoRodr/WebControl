@@ -7,3 +7,5 @@ export const usuarioRouter = Router();
 usuarioRouter.get("/", UsuarioController.getAll);
 
 usuarioRouter.use(errorHandler);
+
+export default usuarioRouter;
