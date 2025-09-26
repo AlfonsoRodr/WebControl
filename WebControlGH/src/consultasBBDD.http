@@ -78,7 +78,7 @@ Content-Type: application/json
 }
 
 ### Actualizar obra
-PUT http://localhost:3002/api/obra/5301
+PUT http://localhost:3002/api/obra/5302
 Content-Type: application/json
 
 {
@@ -104,7 +104,12 @@ Content-Type: application/json
 }
 
 ### Eliminar obra
-DELETE http://localhost:3002/api/obra/5301
+DELETE http://localhost:3002/api/obra/5302
+Content-Type: application/json
+
+{
+    "codigoUsuarioBaja": 4
+}
 
 ### ENDPOINTS PARA LOS FORMS
 
@@ -215,8 +220,8 @@ POST http://localhost:3002/api/relacion-obras/padre
 Content-Type: application/json
 
 {
-    "idPadre": 1,
-    "idHija":2
+    "idObraPadre": null,
+    "idObraHija":2
 }
 
 ### Establecer hijas a una obra
@@ -224,12 +229,9 @@ POST http://localhost:3002/api/relacion-obras/hijas
 Content-Type: application/json
 
 {
-    "idPadre" : 1,
-    "idHijas" : [2,3,4]
+    "idObraPadre" : 1,
+    "idsObrasHijas" : []
 }
-
-### Borrar todas las relaciones de una obra
-DELETE http://localhost:3002/api/relacion-obras/1
 
 ###### ENDPOINTS RENTABILIDAD #############
 

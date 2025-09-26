@@ -1,4 +1,4 @@
-export function facturasErrorHandler(err, _, res) {
+export function errorHandler(err, _, res) {
     console.error(err);
 
     if (err.name === "ValidationError") {
@@ -23,6 +23,6 @@ export function facturasErrorHandler(err, _, res) {
     }
     return res.status(500).json({
         success: false,
-        message: "Error interno al procesar facturas"
+        message: "Error interno al procesar el recurso"
     });
 }

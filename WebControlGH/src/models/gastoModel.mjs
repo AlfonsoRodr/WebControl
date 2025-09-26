@@ -1,7 +1,8 @@
-const { db } = require("../database.js");
+import { db } from "../database.js"
 
-exports.getAllGastosPorValidar = (callback) => {
-  const query = `
+export class GastoModel {
+  static async getAllGastosPorValidar() {
+    const query = `
         SELECT
             g.*,
             u.codigo_firma AS usuario_alta,
@@ -24,11 +25,12 @@ exports.getAllGastosPorValidar = (callback) => {
             usuarios AS u3 ON g.codigo_usuario_pago = u3.codigo_usuario
         WHERE g.codigo_usuario_validacion IS NULL`;
 
-  db.query(query, callback);
-};
+    const [result] = await db.query(query);
+    return result;
+  }
 
-exports.getAllGastosPorPagar = (callback) => {
-  const query = `
+  static async getAllGastosPorPagar() {
+    const query = `
         SELECT
             g.*,
             u.codigo_firma AS usuario_alta,
@@ -51,11 +53,12 @@ exports.getAllGastosPorPagar = (callback) => {
             usuarios AS u3 ON g.codigo_usuario_pago = u3.codigo_usuario
         WHERE g.codigo_usuario_pago IS NULL`;
 
-  db.query(query, callback);
-};
+    const [result] = await db.query(query);
+    return result;
+  }
 
-exports.getGastosByObra = (idObra, callback) => {
-  const query = `
+  static async getGastosByObra({ idObra }) {
+    const query = `
         SELECT
             g.fecha_gasto,
             u.codigo_firma AS usuario_alta,
@@ -77,5 +80,7 @@ exports.getGastosByObra = (idObra, callback) => {
             tipogasto AS tg ON g.id_tipogasto = tg.id_tipogasto
         WHERE g.id_obra = ?`;
 
-  db.query(query, [idObra], callback);
-};
+    const [result] = await db.query(query, [idObra]);
+    return result;
+  }
+}

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { FacturasController } from "../controllers/facturasController.mjs";
-import { facturasErrorHandler } from "../middlewares/FacturasErrorHandler.mjs";
+import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
 export const facturasRouter = Router();
 
@@ -10,4 +10,4 @@ facturasRouter.post("/", FacturasController.create);
 facturasRouter.patch("/:id", FacturasController.update);
 facturasRouter.delete("/:id", FacturasController.delete);
 
-facturasRouter.use(facturasErrorHandler);
+facturasRouter.use(errorHandler);
