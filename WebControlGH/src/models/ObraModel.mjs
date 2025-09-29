@@ -48,7 +48,7 @@ export class ObraModel {
     return result;
   }
 
-  static async getById({ id }) {
+  static async getById({ idObra }) {
     const query = `
     SELECT
       o.*,
@@ -91,7 +91,7 @@ export class ObraModel {
 
     WHERE o.id_obra = ?`;
 
-    const [result] = await db.query(query, [id]);
+    const [result] = await db.query(query, [idObra]);
     return result;
   }
 

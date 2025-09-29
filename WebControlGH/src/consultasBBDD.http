@@ -49,7 +49,7 @@ DELETE http://localhost:3002/facturas/15
 GET http://localhost:3002/api/obra
 
 ### GET Obra específica
-GET http://localhost:3002/api/obra/4536
+GET http://localhost:3002/api/obra/4147
 
 ### POST Obra
 POST http://localhost:3002/api/obra

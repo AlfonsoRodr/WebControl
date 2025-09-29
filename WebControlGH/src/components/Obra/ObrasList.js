@@ -34,11 +34,12 @@ const ObrasList = () => {
     try {
       const endpoint = "http://localhost:3002/api/obra";
       const response = await axios.get(endpoint);
-      setAllObras(response.data);
-      setFilteredObras(response.data);
-      countObrasSuperadas(response.data);
-      countObrasFacturadas(response.data);
-      countObrasSeguimiento(response.data);
+      // Response.data tiene success y data. Hay que acceder a data.data para los datos (¿Está bien?)
+      setAllObras(response.data.data);
+      setFilteredObras(response.data.data);
+      countObrasSuperadas(response.data.data);
+      countObrasFacturadas(response.data.data);
+      countObrasSeguimiento(response.data.data);
     } catch (error) {
       console.error(`Error al recuperar las obras - ${error}`);
     }

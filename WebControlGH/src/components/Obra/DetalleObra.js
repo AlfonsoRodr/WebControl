@@ -32,7 +32,8 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/obra/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setFilteredObra(res.data[0]);
+      console.log("Obra filtrada", res.data);
+      setFilteredObra(res.data.data[0]);
     } catch (err) {
       console.error(`Error al obtener la obra - ${err}`);
     }
@@ -43,8 +44,8 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/rentabilidad/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setRentabilidadObra(res.data[0]);
-      console.log(res.data[0]);
+      setRentabilidadObra(res.data.data[0]);
+      console.log("Rentabilidad", res.data.data);
     } catch (err) {
       console.error(`Error al obtener la rentabilidad - ${err}`);
     }
@@ -55,7 +56,8 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/ecoFactura/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setFacturasObra(res.data);
+      console.log("Facturas", res.data.data);
+      setFacturasObra(res.data.data);
     } catch (err) {
       console.error(`Error al obtener las facturas de la obra - ${err}`);
     }
@@ -66,7 +68,8 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/ecoPedido/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setPedidosObra(res.data);
+      console.log("Pedidos", res.data.data)
+      setPedidosObra(res.data.data);
     } catch (err) {
       console.error(`Error al obtener los pedidos de la obra - ${err}`);
     }
@@ -77,8 +80,9 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/gastos/obra/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setGastosObra(res.data);
-      getTiposGastos(res.data);
+      console.log("Gastos", res.data.data)
+      setGastosObra(res.data.data);
+      getTiposGastos(res.data.data);
     } catch (err) {
       console.error(`Error al obtener los gastos de la obra - ${err}`);
     }
