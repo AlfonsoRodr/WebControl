@@ -1,4 +1,3 @@
-import { success } from "zod";
 import { GastoModel } from "../models/gastoModel.mjs";
 
 export class GastoController {
@@ -22,10 +21,20 @@ export class GastoController {
   }
 
   static async getGastosByObra(req, res, next) {
-    const { idObra } = req.params;
     try {
+      const { idObra } = req.params;
       const gastosPorObra = await GastoModel.getGastosByObra({ idObra });
       res.json({ success: true, data: gastosPorObra });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async getHorasExtraByObra(req, res, next) {
+    try {
+      const { idObra } = req.params;
+      const horasExtra = await GastoModel.getHorasExtraByObra({ idObra });
+      res.json({ success: true, data: horasExtra });
     } catch (error) {
       next(error);
     }

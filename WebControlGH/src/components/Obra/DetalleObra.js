@@ -20,10 +20,16 @@ const DetalleObra = () => {
   const [pedidosObra, setPedidosObra] = useState([]);
   // Estado para los gastos asociados a una obra
   const [gastosObra, setGastosObra] = useState([]);
+  // Estado para el listado de horas asociadas a una obra
+  const [horasObra, setHorasObra] = useState([]);
+  // Estado para el listado de horax extra asociadas a una obra
+  const [horasExtraObra, setHorasExtraObra] = useState([]);
   // Estado para los tipos de gastos
   const [tiposGastos, setTiposGastos] = useState([]);
   // Estado para mostrar la lista de gastos
   const [mostrarGastos, setMostrarGastos] = useState(false);
+  // Estado para mostrar la lista de horas
+  const [mostrarHoras, setMostrarHoras] = useState(false);
 
   // ----------------------- FETCH DE DATOS ------------------------------- \\
 
@@ -32,7 +38,6 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/obra/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      console.log("Obra filtrada", res.data);
       setFilteredObra(res.data.data[0]);
     } catch (err) {
       console.error(`Error al obtener la obra - ${err}`);
@@ -44,8 +49,7 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/rentabilidad/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setRentabilidadObra(res.data.data[0]);
-      console.log("Rentabilidad", res.data.data);
+      setRentabilidadObra(res.data.data);
     } catch (err) {
       console.error(`Error al obtener la rentabilidad - ${err}`);
     }
@@ -56,7 +60,6 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/ecoFactura/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      console.log("Facturas", res.data.data);
       setFacturasObra(res.data.data);
     } catch (err) {
       console.error(`Error al obtener las facturas de la obra - ${err}`);
@@ -68,7 +71,6 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/ecoPedido/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      console.log("Pedidos", res.data.data)
       setPedidosObra(res.data.data);
     } catch (err) {
       console.error(`Error al obtener los pedidos de la obra - ${err}`);
@@ -80,11 +82,32 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/gastos/obra/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      console.log("Gastos", res.data.data)
       setGastosObra(res.data.data);
       getTiposGastos(res.data.data);
     } catch (err) {
       console.error(`Error al obtener los gastos de la obra - ${err}`);
+    }
+  };
+
+  // Fetch de las horas asociadas a una obra
+  const fetchHoras = async (idObra) => {
+    const endpoint = `http://localhost:3002/api/horas/${idObra}`;
+    try {
+      const res = await axios.get(endpoint);
+      setHorasObra(res.data.data);
+    } catch (error) {
+      console.error(`Error al obtener las horas de la obra - ${error}`);
+    }
+  };
+
+  // Fetch de las horas extra asociadas a una obra
+  const fetchHorasExtra = async (idObra) => {
+    const endpoint = `http://localhost:3002/api/gastos/horas-extra/${idObra}`;
+    try {
+      const res = await axios.get(endpoint);
+      setHorasExtraObra(res.data.data);
+    } catch (error) {
+      console.error(`Error al obtener las horas extra de la obra - ${error}`);
     }
   };
 
@@ -96,6 +119,8 @@ const DetalleObra = () => {
     fetchFacturas(idObra);
     fetchPedidos(idObra);
     fetchGastos(idObra);
+    fetchHoras(idObra);
+    fetchHorasExtra(idObra);
   }, []);
 
   if (!filteredObra) {
@@ -114,16 +139,47 @@ const DetalleObra = () => {
     /*setFacturas(facturas.filter((factura) => factura.codigo !== codigoFactura));*/
   };
 
-  // Funcion para obtener los tipos de gastos
+  // Funcion para obtener los diferentes tipos de gastos y el coste total de cada tipo de gasto.
   const getTiposGastos = (gastosObra) => {
-    const tiposUnicos = [];
+    const resumen = {};
+
     gastosObra.forEach((gasto) => {
-      if (gasto.tipo_gasto && !tiposUnicos.includes(gasto.tipo_gasto)) {
-        tiposGastos.push(gasto.tipo_gasto);
+      if (gasto.tipo_gasto) {
+        const totalGasto = gasto.cantidad * gasto.importe;
+        if (!resumen[gasto.tipo_gasto]) {
+          resumen[gasto.tipo_gasto] = 0;
+        }
+        resumen[gasto.tipo_gasto] += totalGasto;
+        resumen[gasto.tipo_gasto] =
+          Math.round(resumen[gasto.tipo_gasto] * 100) / 100;
       }
     });
-    setTiposGastos(tiposUnicos);
+
+    const tiposConImporte = Object.entries(resumen).map(([tipo, importe]) => ({
+      tipo,
+      importe: Number(importe.toFixed(2)),
+    }));
+
+    setTiposGastos(tiposConImporte);
   };
+
+  // Suma de los gastos
+  const totalImporteGastos = gastosObra.reduce(
+    (acc, gasto) => acc + gasto.cantidad * gasto.importe,
+    0
+  );
+
+  // Suma de las horas extra (No está bien registrado en la BBDD por eso se recalcula)
+  const totalHorasExtra = horasExtraObra.reduce(
+    (acc, hora) => acc + hora.cantidad,
+    0
+  );
+
+  // Importe total de las horas extra (No está en la BBDD)
+  const totalImporteHorasExtra = horasExtraObra.reduce(
+    (acc, hora) => acc + hora.cantidad * hora.importe,
+    0
+  );
 
   // -------------------------------------------------------------------------------------- \\
 
@@ -140,7 +196,7 @@ const DetalleObra = () => {
             </Form.Label>
             <Form.Control
               type="text"
-              value={filteredObra.codigo_obra}
+              value={filteredObra.codigo_obra || ""}
               readOnly
             />
           </Form.Group>
@@ -151,7 +207,7 @@ const DetalleObra = () => {
             </Form.Label>
             <Form.Control
               as="textarea"
-              value={filteredObra.descripcion_obra}
+              value={filteredObra.descripcion_obra || ""}
               readOnly
             />
           </Form.Group>
@@ -182,54 +238,61 @@ const DetalleObra = () => {
           <Accordion.Header>Información General</Accordion.Header>
           <Accordion.Body>
             <p>
-              <strong>Tipo:</strong> {filteredObra.desc_tipo_obra}
+              <strong>Tipo:</strong> {filteredObra.desc_tipo_obra || ""}
             </p>
             <p>
-              <strong>Facturable:</strong> {filteredObra.facturable}
+              <strong>Facturable:</strong> {filteredObra.facturable || ""}
             </p>
             <p>
-              <strong>Estado:</strong> {filteredObra.desc_estado_obra}
+              <strong>Estado:</strong> {filteredObra.desc_estado_obra || ""}
             </p>
             <p>
               <strong>Fecha de Alta:</strong>{" "}
-              {new Date(filteredObra.fecha_alta).toLocaleDateString("es-Es")}
+              {new Date(filteredObra.fecha_alta).toLocaleDateString("es-Es") ||
+                ""}
             </p>
             <p>
               <strong>Usuario Alta:</strong>{" "}
-              {`${filteredObra.nombre_usuario} ${filteredObra.apellido_1_usuario} ${filteredObra.apellido_2_usuario}`}
+              {`${filteredObra.nombre_usuario || ""} ${
+                filteredObra.apellido_1_usuario || ""
+              } ${filteredObra.apellido_2_usuario || ""}`}
             </p>
             <p>
-              <strong>Fecha Prevista:</strong> {filteredObra.fecha_prevista_fin}
+              <strong>Fecha Prevista:</strong>{" "}
+              {filteredObra.fecha_prevista_fin || ""}
             </p>
             <p>
               <strong>Número de Horas Previstas:</strong>{" "}
-              {filteredObra.horas_previstas}
+              {filteredObra.horas_previstas || ""}
             </p>
             <p>
-              <strong>Gasto Previsto:</strong> {filteredObra.gasto_previsto}
+              <strong>Gasto Previsto:</strong>{" "}
+              {filteredObra.gasto_previsto || ""}
             </p>
             <p>
-              <strong>Importe:</strong> {filteredObra.importe}
+              <strong>Importe:</strong> {filteredObra.importe || ""}
             </p>
             <p>
-              <strong>Viabilidad:</strong> {filteredObra.viabilidad}
+              <strong>Viabilidad:</strong> {filteredObra.viabilidad || ""}
             </p>
             <p>
-              <strong>Empresa:</strong> {filteredObra.nombre_empresa}
+              <strong>Empresa:</strong> {filteredObra.nombre_empresa || ""}
             </p>
             <p>
               <strong>Contacto:</strong>{" "}
-              {`${filteredObra.nombre_contacto} ${filteredObra.apellido_1_contacto} ${filteredObra.apellido_2_contacto}`}
+              {`${filteredObra.nombre_contacto || ""} ${
+                filteredObra.apellido_1_contacto || ""
+              } ${filteredObra.apellido_2_contacto || ""}`}
             </p>
             <p>
-              <strong>Complejo:</strong> {filteredObra.nombre_edificio}
+              <strong>Complejo:</strong> {filteredObra.nombre_edificio || ""}
             </p>
             <p>
-              <strong>Observaciones:</strong> {filteredObra.observaciones}
+              <strong>Observaciones:</strong> {filteredObra.observaciones || ""}
             </p>
             <p>
               <strong>Observaciones Internas:</strong>{" "}
-              {filteredObra.observaciones_internas}
+              {filteredObra.observaciones_internas || ""}
             </p>
           </Accordion.Body>
         </Accordion.Item>
@@ -358,11 +421,6 @@ const DetalleObra = () => {
           <Accordion.Body>
             {/* Horas imputadas a la Obra */}
             <h5>Horas Imputadas a la Obra</h5>
-            <Form.Check
-              type="checkbox"
-              label="Mostrar listado de horas"
-              className="mb-3"
-            />
             <p>
               <strong>Fecha Hora Inicial:</strong>{" "}
               {rentabilidadObra.fechaHoraInicial
@@ -379,9 +437,68 @@ const DetalleObra = () => {
                   )
                 : "Sin especificar"}
             </p>
+            <Form.Check
+              type="checkbox"
+              label="Mostrar listado de horas"
+              className="mb-3"
+              checked={mostrarHoras}
+              onChange={() => setMostrarHoras((prev) => !prev)}
+            />
+
+            {/* LISTADO DE HORAS */}
+            {mostrarHoras && (
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Dia Trab.</th>
+                    <th>Usu</th>
+                    <th>Tarea</th>
+                    <th>Validado</th>
+                    <th>UsuV</th>
+                    <th>hrs.</th>
+                    <th>p.h.</th>
+                    <th>Total</th>
+                    <th>Accion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {horasObra.length > 0 ? (
+                    horasObra.map((hora, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          {new Date(hora.dia_trabajado).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{hora.usuario}</td>
+                        <td>{hora.id_tarea}</td>
+                        <td>
+                          {new Date(hora.fecha_validacion).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{hora.usuario_validacion}</td>
+                        <td>{hora.num_horas}</td>
+                        <td>{hora.precio_hora}</td>
+                        <td>{hora.num_horas * hora.precio_hora}</td>
+                        <td>
+                          <Button variant="info" className="me-2">
+                            Detalle
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4">No hay horas asociadas</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
             <div className="mt-3">
               <strong>Totales Horas</strong>
-              <p>Total Horas Imputadas: {rentabilidadObra.horasTotal}</p>
+              <p>Total Horas Imputadas: {rentabilidadObra.horasReal}</p>
               <p>Total Importe Horas: {rentabilidadObra.gastoPersonal}</p>
             </div>
 
@@ -403,12 +520,71 @@ const DetalleObra = () => {
                   )
                 : "Sin especificar"}
             </p>
+            {/* LISTADO DE HORAS EXTRA*/}
+            {mostrarHoras && (
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Dia Trab.</th>
+                    <th>Usu</th>
+                    <th>Tipo</th>
+                    <th>Validado</th>
+                    <th>UsuV</th>
+                    <th>Visa</th>
+                    <th>Pagado</th>
+                    <th>Cant.</th>
+                    <th>i.u.</th>
+                    <th>Total</th>
+                    <th>Accion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {horasExtraObra.length > 0 ? (
+                    horasExtraObra.map((hora, idx) => (
+                      <tr key={idx}>
+                        <td>
+                          {new Date(hora.fecha_gasto).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{hora.usuario}</td>
+                        <td>{hora.descripcion}</td>
+                        <td>
+                          {new Date(hora.fecha_validacion).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{hora.usuario_validacion}</td>
+                        <td>{hora.pagado_visa ? "[SÍ]" : "[NO]"}</td>
+                        <td>
+                          {new Date(hora.fecha_pago).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{hora.cantidad}</td>
+                        <td>{hora.importe}</td>
+                        <td>{hora.cantidad * hora.importe}</td>
+                        <td>
+                          <Button variant="info" className="me-2">
+                            Detalle
+                          </Button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4">No hay horas asociadas</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
             <div className="mt-3">
               <strong>Totales Horas Extras</strong>
-              <p>Total Cantidad Horas Extra: {rentabilidadObra.horasExtra}</p>
+              <p>Total Cantidad Horas Extra: {totalHorasExtra ?? ''}</p>
               <p>
                 Total Importe Horas Extra:{" "}
-                {rentabilidadObra.gastoPersonalExtra ?? "Sin especificar"}
+                {totalImporteHorasExtra ?? ''}
               </p>
             </div>
 
@@ -492,12 +668,16 @@ const DetalleObra = () => {
 
             <div className="mt-3">
               <strong>Totales Gastos Generales</strong>
-              <p>Kilómetros Coche Empresa: Sin incluir</p>
-              <p>Comida/Cena: Sin incluir</p>
-              <p>Otros: Sin incluir</p>
+              {tiposGastos.length > 0 ? (
+                tiposGastos.map((gasto, idx) => (
+                  <p key={idx}>{`${gasto.tipo}: ${gasto.importe}`}</p>
+                ))
+              ) : (
+                <p>No hay gastos asociados</p>
+              )}
               <p>
                 <strong>Total Importe Gastos:</strong>
-                {rentabilidadObra.gastoReal}
+                {totalImporteGastos.toFixed(2)}
               </p>
             </div>
 
@@ -506,7 +686,7 @@ const DetalleObra = () => {
 
             <div className="mt-3">
               <strong>Totales Almacen</strong>
-              <p>Total Importe Almacen: Sin incluir</p>
+              <p>Total Importe Almacen: {rentabilidadObra.gastos_almacen ?? 0}</p>
             </div>
 
             {/* Gastos de Compras */}
@@ -514,7 +694,7 @@ const DetalleObra = () => {
 
             <div className="mt-3">
               <strong>Totales Compras</strong>
-              <p>Total Importe Compras: Sin incluir</p>
+              <p>Total Importe Compras: {rentabilidadObra.gastos_compras ?? 0}</p>
               <p>
                 <strong>Total Horas/Gastos</strong>
               </p>
@@ -625,10 +805,10 @@ const DetalleObra = () => {
                 <strong>G.Real (GR)</strong>: {rentabilidadObra.gastoReal}
               </p>
               <p>
-                <strong>G.Almacen (GA)</strong>: Por incluir
+                <strong>G.Almacen (GA)</strong>: {rentabilidadObra.gastos_almacen ?? 0}
               </p>
               <p>
-                <strong>G.Compras (GC)</strong>: Por incluir
+                <strong>G.Compras (GC)</strong>: {rentabilidadObra.gastos_compras ?? 0}
               </p>
               <p>
                 <strong>Importe</strong>:{rentabilidadObra.importe}

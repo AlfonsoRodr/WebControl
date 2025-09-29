@@ -1,4 +1,4 @@
-import { db } from "../database.js"
+import { db } from "../database.js";
 
 export class GastoModel {
   static async getAllGastosPorValidar() {
@@ -79,6 +79,33 @@ export class GastoModel {
         LEFT JOIN
             tipogasto AS tg ON g.id_tipogasto = tg.id_tipogasto
         WHERE g.id_obra = ?`;
+
+    const [result] = await db.query(query, [idObra]);
+    return result;
+  }
+
+  static async getHorasExtraByObra({ idObra }) {
+    const query = `
+    SELECT
+        g.fecha_gasto,
+        u.codigo_firma AS usuario,
+        tg.descripcion,
+        g.fecha_validacion,
+        u2.codigo_firma AS usuario_validacion,
+        g.pagado_visa,
+        g.fecha_pago,
+        g.cantidad,
+        g.importe
+    FROM
+        gastosobra AS g
+    LEFT JOIN
+        tipogasto AS tg ON g.id_tipogasto = tg.id_tipogasto
+    LEFT JOIN
+        usuarios AS u ON g.codigo_usuario = u.codigo_usuario
+    LEFT JOIN
+        usuarios AS u2 ON g.codigo_usuario = u2.codigo_usuario
+    WHERE
+        tg.descripcion = 'Hora Extra' AND g.id_obra = ?`;
 
     const [result] = await db.query(query, [idObra]);
     return result;
