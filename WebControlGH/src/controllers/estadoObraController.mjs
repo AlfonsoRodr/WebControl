@@ -1,13 +1,14 @@
-import * as estadoObraModel from "../models/estadoObraModel.mjs";
+import { EstadoObraModel } from "../models/estadoObraModel.mjs";
 
-export const getAllEstadosObra = async (req, res) => {
-	try {
-		const result = await estadoObraModel.getAllEstadosObra();
-		res.json(result);
-	} 
-	catch (error) {
-		res.status(500).json({
-			message: `Error al obtener los datos de la obra - ${error}`
-		});
-	}
-};
+export class EstadoObraController {
+  static async getAll(req, res, next) {
+    try {
+      const estados = await EstadoObraModel.getAll();
+      res.json({ success: true, data: estados });
+    } catch (error) {
+      next(error);
+    }
+  }
+}
+
+

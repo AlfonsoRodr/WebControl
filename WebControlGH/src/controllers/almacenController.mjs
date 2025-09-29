@@ -1,59 +1,79 @@
-import * as almacenModel from "../models/almacenModel.mjs";
+import { AlmacenModel } from "../models/almacenModel.mjs";
 
-export const getAllProductos = async (req, res) => {
-	try {
-		const result = await almacenModel.getAllProductos();
-		res.json(result);
-	} catch (err) {
-		res
-			.status(500)
-			.json({ message: `Error al obtener los productos - ${err}` });
-	}
-};
+export class AlmacenController {
+  static async getAll(req, res, next) {
+    try {
+      const productos = await AlmacenModel.getAll();
+      res.json({ success: true, data: productos });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const getProductoById = async (req, res) => {
-	const { id } = req.params;
-	try {
-		const result = await almacenModel.getProductoById(id);
-		res.json(result[0]);
-	} catch (err) {
-		res.status(500).json({
-			message: `Error al obtener el producto con id ${id} - ${err}`,
-		});
-	}
-};
+  static async getById(req, res, next) {
+    try {
+      const { idProducto } = req.params;
+      const producto = await AlmacenModel.getById({ idProducto });
+      res.json({ success: true, data: producto });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const createProducto = async (req, res) => {
-	try {
-		await almacenModel.createProducto(req.body);
-		res.status(201).json({ message: "Producto creado con éxito" });
-	} catch (err) {
-		res
-			.status(500)
-			.json({ message: `Error al crear el producto - ${err}` });
-	}
-};
+  static async create(req, res, next) {
+    try {
+      const input = req.body;
+      const nuevoProducto = await AlmacenModel.create({ input });
+      res.status(201).json({ success: true, data: nuevoProducto });
+    } catch (error) {
+      next(error);
+    }
+  }
 
-export const updateProducto = async (req, res) => {
-	const { id } = req.params;
-	try {
-		await almacenModel.updateProducto(id, req.body);
-		res.json({ message: "Producto actualizado correctamente" });
-	} catch (err) {
-		res
-			.status(500)
-			.json({ message: `Error al actualizar el producto - ${err}` });
-	}
-};
+  static async update(req, res, next) {
+    try {
+      const { idProducto } = req.params;
+      const input = req.body;
 
-export const deletePedido = async (req, res) => {
-	const { id } = req.params;
-	try {
-		await almacenModel.deleteProducto(id);
-		res.json({ message: "Producto borrado correctamente" });
-	} catch (err) {
-		res
-			.status(500)
-			.json({ message: `Error al eliminar el producto - ${err}` });
-	}
-};
+      const productoActualizado = await AlmacenModel.update({
+        idProducto: Number(idProducto),
+        input,
+      });
+
+      if (!productoActualizado) {
+        const error = new Error("Producto no encontrado o actualizado");
+        error.name = "NotFoundError";
+        throw error;
+      }
+      res.json({ success: true, data: productoActualizado });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  static async delete(req, res, next) {
+    try {
+      const { idProducto } = req.params;
+      const { codigoUsuarioBaja } = req.body;
+
+      if (!codigoUsuarioBaja) {
+        const error = new Error("codigoUsuarioBaja es requerido para eliminar");
+        error.name = "ValidationError";
+        throw error;
+      }
+      const productoEliminado = await AlmacenModel.delete({
+        idProducto: Number(idProducto),
+        codigoUsuarioBaja,
+      });
+
+      if (!productoEliminado) {
+        const error = new Error("Producto no encontrado o ya eliminado");
+        error.name = "NotFoundError";
+        throw error;
+      }
+      res.json({ success: true, data: productoEliminado });
+    } catch (error) {
+      next(error);
+    }
+  }
+}

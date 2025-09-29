@@ -1,8 +1,11 @@
-import express from "express";
-import * as edificioController from "../controllers/edificioController.mjs";
+import { Router } from "express";
+import { EdificioController } from "../controllers/edificioController.mjs";
+import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
-const router = express.Router();
+export const edificioRouter = Router();
 
-router.get("/", edificioController.getAllEdificios);
+edificioRouter.get("/", EdificioController.getAll);
 
-export default router;
+edificioRouter.use(errorHandler);
+
+export default edificioRouter;

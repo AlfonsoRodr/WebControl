@@ -1,8 +1,11 @@
-import express from "express";
-import * as empresaController from "../controllers/empresaController.mjs";
+import { Router } from "express";
+import { EmpresaController } from "../controllers/empresaController.mjs";
+import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
-const router = express.Router();
+export const empresaRouter = Router();
 
-router.get("/", empresaController.getAllEmpresas);
+empresaRouter.get("/", EmpresaController.getAll);
 
-export default router;
+empresaRouter.use(errorHandler);
+
+export default empresaRouter;

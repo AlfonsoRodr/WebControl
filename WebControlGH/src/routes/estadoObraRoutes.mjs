@@ -1,8 +1,11 @@
-import express from "express";
-import * as estadoObraController from "../controllers/estadoObraController.mjs";
+import { Router } from "express";
+import { EstadoObraController } from "../controllers/estadoObraController.mjs";
+import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
-const router = express.Router();
+export const estadoObRouter = Router();
 
-router.get("/", estadoObraController.getAllEstadosObra);
+estadoObRouter.get("/", EstadoObraController.getAll);
 
-export default router;
+estadoObRouter.use(errorHandler);
+
+export default estadoObRouter;

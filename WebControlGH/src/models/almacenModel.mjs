@@ -1,9 +1,15 @@
 import { db } from "../database.js";
+import {
+  validateProducto,
+  validatePartialProducto,
+} from "../validations/productoValidator.mjs";
+import { ValidationError } from "../validations/ValidationError.mjs";
 
 // MODELO DE NEGOCIO PARA LOS PRODUCTOS DEL ALMACÉN
 
-export const getAllProductos = () => {
-	const query = `
+export class AlmacenModel {
+  static async getAll() {
+    const query = `
     SELECT
         a.id,
         a.codigo,
@@ -34,16 +40,12 @@ export const getAllProductos = () => {
     ORDER BY a.descripcion
   `;
 
-	return new Promise((resolve, reject) => {
-		db.query(query, (err, result) => {
-			if (err) return reject(err);
-			resolve(result);
-		});
-	});
-};
+    const [result] = await db.query(query);
+    return result;
+  }
 
-export const getProductoById = (id) => {
-	const query = `
+  static async getById({ idProducto }) {
+    const query = `
     SELECT
         a.id,
         a.codigo,
@@ -74,100 +76,145 @@ export const getProductoById = (id) => {
         tipounidad AS tu ON a.id_tipounidad = tu.id
     WHERE a.id = ?
   `;
+    const [result] = await db.query(query, [idProducto]);
+    return result;
+  }
 
-	return new Promise((resolve, reject) => {
-		db.query(query, [id], (err, result) => {
-			if (err) return reject(err);
-			resolve(result);
-		});
-	});
-};
+  static async create({ input }) {
+    const validatedProducto = validateProducto(input);
 
-export const createProducto = (producto) => {
-	const query = `
-    INSERT INTO almacen (codigo, descripcion, etiqueta, id_proveedor, 
-    id_familia, id_tipounidad, fecha_alta, codigo_usuario_alta, stock, stock_min, stock_max, id_marca,
-    precio_unitario, precio_total, observaciones)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-  `;
+    if (!validatedProducto.success) {
+      throw new ValidationError(
+        "Producto con formato inválido",
+        validatedProducto.error.issues
+      );
+    }
 
-	const values = [
-		producto.cod,
-		producto.descripcion,
-		producto.etiqueta,
-		producto.proveedor,
-		producto.familia,
-		producto.tipoUnidad,
-		producto.fechaAlta,
-		producto.usuarioAlta,
-		producto.stock,
-		producto.stockMin,
-		producto.stockMax,
-		producto.marca,
-		producto.precioUnitario,
-		producto.precioTotal,
-		producto.observaciones,
-	];
+    const validData = validatedProducto.data;
+    const values = Object.values(validData);
 
-	return new Promise((resolve, reject) => {
-		db.query(query, values, (err, result) => {
-			if (err) return reject(err);
-			resolve(result);
-		});
-	});
-};
+    const insertQuery = `
+    INSERT INTO almacen (
+    codigo, 
+    descripcion, 
+    etiqueta, 
+    id_proveedor, 
+    id_familia, 
+    id_tipounidad,
+    fecha_alta, 
+    codigo_usuario_alta, 
+    stock, 
+    stock_min, 
+    stock_max, 
+    id_marca,
+    precio_unitario, 
+    precio_total, 
+    observaciones)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-export const updateProducto = (id, data) => {
-	const query = `
+    // Con mysql2/promise el resultado de db.query(...) devuelve dos elementos:
+    // -> 1º El array de resultados (filas de la consulta)
+    // ->2º Metadatos: Información adicional sobre la consulta
+
+    // El principio de desestructuración de JS es posicional, no nombrado. 
+    // Con esto extraemos el resultado de la consulta
+    const [result] = await db.query(insertQuery, values);
+
+    // Mostramos el producto recién almacenado
+    const [rows] = await db.query(
+      `
+        SELECT *
+        FROM almacen
+        WHERE id = ?
+        `,
+      [result.insertId]
+    );
+
+    return rows[0] ?? null;
+  }
+
+  static async update({ idProducto, input }) {
+    const updatedInfo = validateProducto(input);
+
+    if (!updatedInfo.success) {
+      throw new ValidationError(
+        "Producto con formato inválido",
+        updatedInfo.error.issues
+      );
+    }
+
+    const valid = updatedInfo.data;
+    const values = Object.values(valid);
+
+    const query = `
     UPDATE almacen SET
         codigo = ?,
-        etiqueta = ?,
         descripcion = ?,
-        fecha_alta = ?,
-        codigo_usuario_alta = ?,
+        etiqueta = ?,
         id_proveedor = ?,
         id_familia = ?,
-        id_marca = ?,
         id_tipounidad = ?,
-        precio_unitario = ?,
+        fecha_alta = ?,
+        codigo_usuario_alta = ?,
+        stock = ?,
         stock_min = ?,
         stock_max = ?,
+        id_marca = ?,
+        precio_unitario = ?,
+        precio_total = ?,
         observaciones = ?
+    WHERE id = ?`;
+
+    await db.query(query, [...values, idProducto]);
+    const [rows] = await db.query(
+      `
+        SELECT
+            codigo, 
+            etiqueta, 
+            descripcion, 
+            fecha_alta, 
+            codigo_usuario_alta, 
+            id_proveedor, 
+            id_familia, 
+            id_marca, 
+            id_tipounidad, 
+            precio_unitario, 
+            stock_min, 
+            stock_max, 
+            observaciones
+        FROM almacen
+        WHERE id = ?`,
+      [idProducto]
+    );
+
+    return rows[0] ?? null;
+  }
+
+  static async delete({ idProducto, codigoUsuarioBaja }) {
+    const query = `
+    UPDATE almacen
+    SET
+      fecha_baja = NOW(),
+      codigo_usuario_baja = ?
     WHERE id = ?
-  `;
+    `;
 
-	const values = [
-		data.cod,
-		data.etiqueta,
-		data.descripcion,
-		data.fechaAlta,
-		data.usuarioAlta,
-		data.proveedor,
-		data.familia,
-		data.marca,
-		data.tipoUnidad,
-		data.precioUnitario,
-		data.stockMin,
-		data.stockMax,
-		data.observaciones,
-		id,
-	];
+    const [result] = await db.query(query, [codigoUsuarioBaja, idProducto]);
 
-	return new Promise((resolve, reject) => {
-		db.query(query, values, (err, result) => {
-			if (err) return reject(err);
-			resolve(result);
-		});
-	});
-};
-
-export const deleteProducto = (id) => {
-	const query = `DELETE FROM almacen WHERE id = ?`;
-
-	return new Promise((resolve, reject) => {
-		db.query(query, [id], (err, result) => {
-			if (err) return reject(err);
-			resolve(result);
-		});
-	});
-};
+    if (result.affectedRows === 0) {
+      return null;
+    }
+    const [rows] = await db.query(
+      `
+       SELECT
+        codigo,
+        descripcion,
+        fecha_baja,
+        codigo_usuario_baja
+      FROM almacen
+      WHERE id = ?`,
+      [idProducto]
+    );
+    return rows[0] ?? null;
+  }
+}

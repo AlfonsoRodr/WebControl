@@ -1,8 +1,11 @@
-import express from "express";
-import * as contactoController from "../controllers/contactoController.mjs";
+import { Router } from "express";
+import { ContactoController } from "../controllers/contactoController.mjs";
+import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
-const router = express.Router();
+const contactoRouter = Router();
 
-router.get("/:idEmpresa", contactoController.getContactoByEmpresa);
+contactoRouter.get("/:idEmpresa", ContactoController.getByEmpresa);
 
-export default router;
+contactoRouter.use(errorHandler);
+
+export default contactoRouter;

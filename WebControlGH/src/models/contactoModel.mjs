@@ -2,8 +2,9 @@ import { db } from "../database.js";
 
 // MODELO DE NEGOCIO PARA LOS CONTACTOS
 
-export const getContactoByEmpresa = (idEmpresa) => {
-	const query = `
+export class ContactoModel {
+  static async getByEmpresa({ idEmpresa }) {
+    const query = `
     SELECT
         c.id_contacto,
         c.nombre_contacto,
@@ -17,10 +18,7 @@ export const getContactoByEmpresa = (idEmpresa) => {
     ORDER BY c.nombre_contacto
   `;
 
-	return new Promise((resolve, reject) => {
-		db.query(query, [idEmpresa], (err, result) => {
-			if (err) return reject(err);
-			resolve(result);
-		});
-	});
-};
+    const [result] = await db.query(query, [idEmpresa]);
+    return result;
+  }
+}

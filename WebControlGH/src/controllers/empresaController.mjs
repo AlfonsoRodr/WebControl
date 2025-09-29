@@ -1,12 +1,12 @@
-import * as empresaModel from "../models/empresaModel.mjs";
+import { EmpresaModel } from "../models/empresaModel.mjs";
 
-export const getAllEmpresas = async (req, res) => {
-  try {
-    const result = await empresaModel.getAllEmpresas();
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({
-      message: `Error al obtener las empresas - ${err}`,
-    });
+export class EmpresaController {
+  static async getAll(req, res, next) {
+    try {
+      const empresas = await EmpresaModel.getAll();
+      res.json({ success: true, data: empresas });
+    } catch (error) {
+      next(error);
+    }
   }
-};
+}

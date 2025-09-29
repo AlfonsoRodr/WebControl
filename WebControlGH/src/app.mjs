@@ -3,7 +3,7 @@ import cors from "cors";
 
 // Enrutadores
 import almacenRouter from "./routes/almacenRoutes.mjs";
-import { facturasRouter } from "./routes/FacturasRouter.mjs";
+import facturasRouter from "./routes/FacturasRouter.mjs";
 import contactoRouter from "./routes/contactoRoutes.mjs";
 import edificioRouter from "./routes/edificioRoutes.mjs";
 import empresaRouter from "./routes/empresaRoutes.mjs";

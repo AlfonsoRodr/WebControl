@@ -1,10 +1,10 @@
-export function errorHandler(err, _, res) {
+export function errorHandler(err, req, res, next) {
     console.error(err);
 
     if (err.name === "ValidationError") {
         return res.status(400).json({
             success: false,
-            errors: err.details
+            errors: err.details ?? ["Error de validación desconocido"]
         });
     }
 

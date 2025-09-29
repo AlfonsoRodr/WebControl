@@ -1,8 +1,11 @@
-import express from "express";
-import * as ecoPedidoController from "../controllers/ecoPedidoController.mjs";
+import { Router } from "express";
+import { EcoPedidoController } from "../controllers/ecoPedidoController.mjs";
+import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
-const router = express.Router();
+const ecoPedidoRouter = Router();
 
-router.get("/:idObra", ecoPedidoController.getPedidoById);
+ecoPedidoRouter.get("/:idObra", EcoPedidoController.getByObra);
 
-export default router;
+ecoPedidoRouter.use(errorHandler);
+
+export default ecoPedidoRouter;

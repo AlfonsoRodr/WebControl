@@ -1,12 +1,13 @@
-import * as edificioModel from "../models/edificioModel.mjs";
+import { EdificioModel } from "../models/edificioModel.mjs";
 
-export const getAllEdificios = async (req, res) => {
-  try {
-    const result = await edificioModel.getAllEdificios();
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({
-      message: `Error al obtener los edificios - ${err}`,
-    });
+export class EdificioController {
+  static async getAll(req, res, next) {
+    try {
+      const edificios = await EdificioModel.getAll();
+      res.json({ success: true, data: edificios });
+    } catch (error) {
+      next(error);
+    }
   }
-};
+}
+

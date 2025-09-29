@@ -11,3 +11,5 @@ facturasRouter.patch("/:id", FacturasController.update);
 facturasRouter.delete("/:id", FacturasController.delete);
 
 facturasRouter.use(errorHandler);
+
+export default facturasRouter;

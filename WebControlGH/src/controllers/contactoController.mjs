@@ -1,13 +1,14 @@
-import * as contactoModel from "../models/contactoModel.mjs";
+import { ContactoModel } from "../models/contactoModel.mjs";
 
-export const getContactoByEmpresa = async (req, res) => {
-	const { idEmpresa } = req.params;
-	try {
-		const result = await contactoModel.getContactoByEmpresa(idEmpresa);
-		res.json(result);
-	} catch (err) {
-		res.status(500).json({
-			message: `Error al obtener los contactos - ${err}`,
-		});
+export class ContactoController {
+  static async getByEmpresa(req, res, next) {
+    try {
+      const { idEmpresa } = req.params;
+      const contactos = await ContactoModel.getByEmpresa({ idEmpresa });
+      res.json({ success: true, data: contactos });
+    } catch (error) {
+		next(error);
 	}
-};
+  }
+}
+

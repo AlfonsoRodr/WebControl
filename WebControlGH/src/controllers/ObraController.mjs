@@ -41,17 +41,17 @@ export class ObraController {
       const { idObra } = req.params;
       const input = req.body;
 
-      const ObraActualizada = await ObraModel.update({
+      const obraActualizada = await ObraModel.update({
         idObra: Number(idObra),
         input,
       });
 
-      if (!ObraActualizada) {
+      if (!obraActualizada) {
         const error = new Error("Obra no encontrada o no actualizada");
         error.name = "NotFoundError";
         throw error;
       }
-      res.json({ success: true, data: ObraActualizada });
+      res.json({ success: true, data: obraActualizada });
     } catch (error) {
       next(error);
     }

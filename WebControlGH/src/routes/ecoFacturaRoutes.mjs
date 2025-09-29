@@ -1,8 +1,11 @@
-import express from "express";
-import * as ecoFacturaController from "../controllers/ecoFacturaController.mjs";
+import { Router } from "express";
+import { EcoFacturaController } from "../controllers/ecoFacturaController.mjs";
+import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
-const router = express.Router();
+const ecoFacturasRouter = Router();
 
-router.get("/:idObra", ecoFacturaController.getFacturaById);
+ecoFacturasRouter.get("/:idObra", EcoFacturaController.getByObra);
 
-export default router;
+ecoFacturasRouter.use(errorHandler);
+
+export default ecoFacturasRouter;

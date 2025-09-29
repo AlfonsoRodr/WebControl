@@ -1,7 +1,8 @@
 import { db } from "../database.js";
 
-export const getFacturaById = (idObra) => {
-  const query = `
+export class EcoFacturaModel {
+  static async getByObra({ idObra }) {
+    const query = `
     SELECT 
       f.*,
       p.codigo_pedido
@@ -12,10 +13,7 @@ export const getFacturaById = (idObra) => {
     WHERE f.id_obra = ?
   `;
 
-  return new Promise((resolve, reject) => {
-    db.query(query, [idObra], (err, result) => {
-      if (err) return reject(err);
-      resolve(result);
-    });
-  });
-};
+    const [result] = await db.query(query, [idObra]);
+    return result;
+  }
+}
