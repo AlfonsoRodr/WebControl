@@ -57,7 +57,9 @@ export class GastoModel {
     return result;
   }
 
-  static async getGastosByObra({ idObra }) {
+  // Puede recibir varios IDs. Necesario para las obras subordinadas
+  static async getGastosByObra({ idsObra }) {
+    const placeholders = idsObra.map(() => "?").join(", ");
     const query = `
         SELECT
             g.fecha_gasto,
@@ -78,13 +80,15 @@ export class GastoModel {
             usuarios AS u2 ON g.codigo_usuario_validacion = u2.codigo_usuario
         LEFT JOIN
             tipogasto AS tg ON g.id_tipogasto = tg.id_tipogasto
-        WHERE g.id_obra = ?`;
+        WHERE g.id_obra IN (${placeholders})`;
 
-    const [result] = await db.query(query, [idObra]);
+    const [result] = await db.query(query, idsObra);
     return result;
   }
 
-  static async getHorasExtraByObra({ idObra }) {
+  // Puede recibir varios IDs. Necesario para las obras subordinadas
+  static async getHorasExtraByObra({ idsObra }) {
+    const placeholders = idsObra.map(() => "?").join(", ");
     const query = `
     SELECT
         g.fecha_gasto,
@@ -105,9 +109,9 @@ export class GastoModel {
     LEFT JOIN
         usuarios AS u2 ON g.codigo_usuario = u2.codigo_usuario
     WHERE
-        tg.descripcion = 'Hora Extra' AND g.id_obra = ?`;
+        tg.descripcion = 'Hora Extra' AND g.id_obra IN (${placeholders})`;
 
-    const [result] = await db.query(query, [idObra]);
+    const [result] = await db.query(query, idsObra);
     return result;
   }
 }

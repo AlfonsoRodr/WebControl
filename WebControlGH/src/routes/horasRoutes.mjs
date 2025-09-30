@@ -4,7 +4,7 @@ import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
 export const horasRouter = Router();
 
-horasRouter.get("/:idObra", HoraController.getByObra);
+horasRouter.post("/buscar", HoraController.getByObra);
 
 horasRouter.use(errorHandler);
 

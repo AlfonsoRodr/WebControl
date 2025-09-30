@@ -22,8 +22,11 @@ export class GastoController {
 
   static async getGastosByObra(req, res, next) {
     try {
-      const { idObra } = req.params;
-      const gastosPorObra = await GastoModel.getGastosByObra({ idObra });
+      const { idsObra } = req.body;
+      if (!Array.isArray(idsObra) || idsObra.length === 0) {
+        return res.json({ success: true, data: [] });
+      }
+      const gastosPorObra = await GastoModel.getGastosByObra({ idsObra });
       res.json({ success: true, data: gastosPorObra });
     } catch (error) {
       next(error);
@@ -32,8 +35,11 @@ export class GastoController {
 
   static async getHorasExtraByObra(req, res, next) {
     try {
-      const { idObra } = req.params;
-      const horasExtra = await GastoModel.getHorasExtraByObra({ idObra });
+      const { idsObra } = req.body;
+      if (!Array.isArray(idsObra) || idsObra.length === 0) {
+        return res.json({ success: true, data: [] });
+      }
+      const horasExtra = await GastoModel.getHorasExtraByObra({ idsObra });
       res.json({ success: true, data: horasExtra });
     } catch (error) {
       next(error);

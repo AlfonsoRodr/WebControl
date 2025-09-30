@@ -49,7 +49,7 @@ DELETE http://localhost:3002/facturas/15
 GET http://localhost:3002/api/obra
 
 ### GET Obra específica
-GET http://localhost:3002/api/obra/4147
+GET http://localhost:3002/api/obra/4758
 
 ### POST Obra
 POST http://localhost:3002/api/obra
@@ -215,10 +215,10 @@ GET http://localhost:3002/api/usuario
 ###### ENDPOINTS RELACION - OBRAS #############
 
 ### Obtener padre de una obra
-GET http://localhost:3002/api/relacion-obras/padre/2
+GET http://localhost:3002/api/relacion-obras/padre/4733
 
 ### Obtener hijas de una obra
-GET http://localhost:3002/api/relacion-obras/hijas/1
+GET http://localhost:3002/api/relacion-obras/hijas/4039
 
 ### Establecer un padre a una obra
 POST http://localhost:3002/api/relacion-obras/padre
@@ -241,7 +241,7 @@ Content-Type: application/json
 ###### ENDPOINTS RENTABILIDAD #############
 
 ### Obtener rentabilidad
-GET http://localhost:3002/api/rentabilidad/1232
+GET http://localhost:3002/api/rentabilidad/4758
 
 ###### ENDPOINTS ECOPEDIDOS #############
 
@@ -262,13 +262,28 @@ GET http://localhost:3002/api/gastos/por-validar
 GET http://localhost:3002/api/gastos/por-pagar
 
 ### Obtener todos los gastos de una obra
-GET http://localhost:3002/api/gastos/obra/68
+POST http://localhost:3002/api/gastos/buscar
+Content-Type: application/json
+
+{
+    "idsObra": [4463]
+}
 
 ### Obtener el listado de horas extra de una obra
-GET http://localhost:3002/api/gastos/horas-extra/4037
+POST http://localhost:3002/api/gastos/horas-extra/buscar
+Content-Type: application/json
+
+{
+    "idsObra": [4039]
+}
 
 ###### ENDPOINTS HORAS #############
 
 ### Obtener el listado de horas asociado a una obra
-GET http://localhost:3002/api/horas/4037
+POST http://localhost:3002/api/horas/buscar
+Content-Type: application/json
+
+{
+    "idsObra": [4463]
+}
 

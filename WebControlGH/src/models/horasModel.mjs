@@ -1,7 +1,10 @@
 import { db } from "../database.js";
 
+// Funciona con varios ids de obras. Necesario para obtener las horas
+//  de las obras subordinadas
 export class HoraModel {
-  static async getByObra({ idObra }) {
+  static async getByObra({ idsObra }) {
+    const placeholders = idsObra.map(() => "?").join(", ");
     const query = `
     SELECT
         h.dia_trabajado,
@@ -18,10 +21,10 @@ export class HoraModel {
     LEFT JOIN
         usuarios AS u2 ON h.codigo_usuario_validacion = u2.codigo_usuario
     WHERE
-        h.id_obra = ?
+        h.id_obra IN (${placeholders})
     `;
 
-    const [result] = await db.query(query, [idObra]);
+    const [result] = await db.query(query, idsObra);
     return result;
   }
 }

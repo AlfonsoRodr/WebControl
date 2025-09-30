@@ -4,11 +4,15 @@ export class RelacionObrasModel {
   static async getObraPadre({ idObra }) {
     const query = `
     SELECT
-        id_obraPadre
+        r.id_obraPadre,
+        o.codigo_obra,
+        o.descripcion_obra
     FROM 
-        relacionobras
+        relacionobras AS r
+    LEFT JOIN
+        obras AS o ON r.id_obraPadre = o.id_obra
     WHERE
-        id_obraHija = ?`;
+        r.id_obraHija = ?`;
 
     const [result] = await db.query(query, [idObra]);
     return result;
@@ -17,11 +21,15 @@ export class RelacionObrasModel {
   static async getObrasHijas({ idObra }) {
     const query = `
     SELECT
-        id_obraHija
+        r.id_obraHija,
+        o.codigo_obra,
+        o.descripcion_obra
     FROM 
-        relacionobras
+        relacionobras AS r
+    LEFT JOIN
+      obras AS o ON r.id_obraHija = o.id_obra
     WHERE
-        id_obraPadre = ?`;
+        r.id_obraPadre = ?`;
 
     const [result] = await db.query(query, [idObra]);
     return result;
