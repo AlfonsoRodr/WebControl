@@ -49,7 +49,10 @@ DELETE http://localhost:3002/facturas/15
 GET http://localhost:3002/api/obra
 
 ### GET Obra específica
-GET http://localhost:3002/api/obra/4758
+GET http://localhost:3002/api/obra/188
+
+### GET Obras por descripción
+GET http://localhost:3002/api/obra/buscar/descripcion?descripcionObra=Cambio
 
 ### POST Obra
 POST http://localhost:3002/api/obra
@@ -218,7 +221,7 @@ GET http://localhost:3002/api/usuario
 GET http://localhost:3002/api/relacion-obras/padre/4733
 
 ### Obtener hijas de una obra
-GET http://localhost:3002/api/relacion-obras/hijas/4039
+GET http://localhost:3002/api/relacion-obras/hijas/4794
 
 ### Establecer un padre a una obra
 POST http://localhost:3002/api/relacion-obras/padre
@@ -274,7 +277,7 @@ POST http://localhost:3002/api/gastos/horas-extra/buscar
 Content-Type: application/json
 
 {
-    "idsObra": [4039]
+    "idsObra": [4927]
 }
 
 ###### ENDPOINTS HORAS #############

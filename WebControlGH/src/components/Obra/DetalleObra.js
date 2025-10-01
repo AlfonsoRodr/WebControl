@@ -4,19 +4,41 @@ import {
   Button,
   Container,
   Form,
+  Row,
+  Col,
   Card,
   Accordion,
   ListGroup,
 } from "react-bootstrap";
-import axios from "axios";
+import axios, { all } from "axios";
 
 const DetalleObra = () => {
   const { idObra } = useParams(); // Obtiene el código de la obra desde la URL
   const navigate = useNavigate();
 
+  // ------------- ESTADOS PARA EL FORMULARIO ---------- \\
+
+  // Para mostrar todos los tipos de obra
+  const [allTiposObra, setAllTiposObra] = useState([]);
+  // Para mostrar los tipos facturables
+  const [allTiposFacturables, setAllTiposFacturables] = useState([]);
+  // Para mostrar los estados de la obra
+  const [allEstadosObra, setAllEstadosObra] = useState([]);
+  // Para mostrar todos los usuarios
+  const [allUsuarios, setAllUsuarios] = useState([]);
+  // Para mostrar todas las empresas
+  const [allEmpresas, setAllEmpresas] = useState([]);
+  // Para mostrar todos los contactos de una empresa
+  const [allContactosEmpresa, setAllContactosEmpresa] = useState([]);
+  // Para mostrar los edificios
+  const [allEdificios, setAllEdificios] = useState([]);
+
+  // ------------- ESTADOS DE LA OBRA ------------------ \\
+
   // Definir el estado para el checkbox "En Seguimiento"
   const [enSeguimiento, setEnSeguimiento] = useState(false);
-
+  // Definir el estado para el checkbox "Ofertado"
+  const [ofertado, setOfertado] = useState(false);
   // Estado para la obra filtrada
   const [filteredObra, setFilteredObra] = useState({});
   // Estado para la rentabilidad de la obra
@@ -75,6 +97,9 @@ const DetalleObra = () => {
     try {
       const res = await axios.get(endpoint);
       setFilteredObra(res.data.data[0]);
+      fetchContactosEmpresa(res.data.data[0].id_empresa);
+      setEnSeguimiento(res.data.data[0].fecha_seg ? true : false);
+      setOfertado(res.data.data[0].fecha_oferta ? true : false);
     } catch (err) {
       console.error(`Error al obtener la obra - ${err}`);
     }
@@ -132,7 +157,6 @@ const DetalleObra = () => {
       const res = await axios.post(endpoint, { idsObra });
       setGastosObrasHijas(res.data.data);
       getTiposGastos(res.data.data, "Hijas");
-      console.log(res.data.data);
     } catch (err) {
       console.error(`Error al obtener los gastos de las obras hijas - ${err}`);
     }
@@ -155,7 +179,6 @@ const DetalleObra = () => {
     try {
       const res = await axios.post(endpoint, { idsObra });
       setHorasObrasHijas(res.data.data);
-      console.log(res.data.data);
     } catch (error) {
       console.error(`Error al obtener las horas de las obras hijas - ${error}`);
     }
@@ -175,11 +198,9 @@ const DetalleObra = () => {
   // Fetch de las horas extra de las obras subordinadas
   const fetchHorasExtraHijas = async (idsObra) => {
     const endpoint = `http://localhost:3002/api/gastos/horas-extra/buscar`;
-    console.log(idsObra);
     try {
       const res = await axios.post(endpoint, { idsObra });
       setHorasExtraObrasHijas(res.data.data);
-      console.log(res.data.data);
     } catch (error) {
       console.error(
         `Error al obtener las horas extra de las obras hijas - ${error}`
@@ -206,17 +227,49 @@ const DetalleObra = () => {
       const res = await axios.get(endpoint);
       setObrasHijas(res.data.data);
       setObrasHijasSeleccionadas(res.data.data);
-      console.log("res.data.data", res.data.data);
       // IDs de las obras hijas
       const idsObrasHijas = res.data.data.map(
         (obraHija) => obraHija.id_obraHija
       );
-      console.log("Desde fetchObrasHijas", idsObrasHijas);
       fetchGastosHijas(idsObrasHijas);
       fetchHorasHijas(idsObrasHijas);
       fetchHorasExtraHijas(idsObrasHijas);
     } catch (error) {
       console.error(`Error al obtener las obras hijas - ${error}`);
+    }
+  };
+
+  const fetchDatosFormulario = async () => {
+    try {
+      const tiposObra = await axios.get(`http://localhost:3002/api/tipo-obra`);
+      setAllTiposObra(tiposObra.data.data);
+      const tiposFacturable = await axios.get(
+        `http://localhost:3002/api/tipo-facturable`
+      );
+      setAllTiposFacturables(tiposFacturable.data.data);
+      const estadosObra = await axios.get(
+        `http://localhost:3002/api/estado-obra`
+      );
+      setAllEstadosObra(estadosObra.data.data);
+      const usuarios = await axios.get(`http://localhost:3002/api/usuario`);
+      setAllUsuarios(usuarios.data.data);
+      const empresas = await axios.get(`http://localhost:3002/api/empresa`);
+      setAllEmpresas(empresas.data.data);
+      const edificios = await axios.get(`http://localhost:3002/api/edificio`);
+      setAllEdificios(edificios.data.data);
+    } catch (error) {
+      console.error(`Error al obtener los datos del formulario - ${error}`);
+    }
+  };
+
+  const fetchContactosEmpresa = async (idEmpresa) => {
+    try {
+      const res = await axios.get(
+        `http://localhost:3002/api/contacto/${idEmpresa}`
+      );
+      setAllContactosEmpresa(res.data.data);
+    } catch (error) {
+      console.error(`Error al obtener los contactos de la empresa - ${error}`);
     }
   };
 
@@ -232,6 +285,7 @@ const DetalleObra = () => {
     fetchHorasExtra([idObra]);
     fetchObraPadre(idObra);
     fetchObrasHijas(idObra);
+    fetchDatosFormulario();
   }, []);
 
   if (!filteredObra) {
@@ -241,14 +295,10 @@ const DetalleObra = () => {
   // ----------------------------- HANDLERS y FUNCIONES AUXILIARES ----------------------- \\
 
   // Función para eliminar un pedido
-  const handleDeletePedido = (codigoPedido) => {
-    /*setPedidos(pedidos.filter((pedido) => pedido.codigo !== codigoPedido));*/
-  };
+  const handleDeletePedido = (codigoPedido) => {};
 
   // Función para eliminar una factura
-  const handleDeleteFactura = (codigoFactura) => {
-    /*setFacturas(facturas.filter((factura) => factura.codigo !== codigoFactura));*/
-  };
+  const handleDeleteFactura = (codigoFactura) => {};
 
   // Funcion para obtener los diferentes tipos de gastos y el coste total de cada tipo de gasto.
   const getTiposGastos = (gastosObra, tipoObra) => {
@@ -279,7 +329,19 @@ const DetalleObra = () => {
 
   // Handlers para búsqueda y selección
   const handleObraPadreBusqueda = async (e) => {
-    console.log("Buscando...");
+    const value = e.target.value;
+    setObraPadreBusqueda(value);
+    if (value.length > 2) {
+      try {
+        const endpoint = `http://localhost:3002/api/obra/buscar/descripcion?descripcionObra=${value}`;
+        const res = await axios.get(endpoint);
+        setSugerenciasPadre(res.data.data);
+      } catch (error) {
+        console.error(`Error al buscar obras - ${error}`);
+      }
+    } else {
+      setSugerenciasPadre([]);
+    }
   };
 
   const seleccionarObraPadre = (obra) => {
@@ -291,7 +353,19 @@ const DetalleObra = () => {
   };
 
   const handleObraHijaBusqueda = async (e) => {
-    console.log("Buscando...");
+    const value = e.target.value;
+    setObraHijaBusqueda(value);
+    if (value.length > 2) {
+      try {
+        const endpoint = `http://localhost:3002/api/obra/buscar/descripcion?descripcionObra=${value}`;
+        const res = await axios.get(endpoint);
+        setSugerenciasHijas(res.data.data);
+      } catch (error) {
+        console.error(`Error al obtener las obras - ${error}`);
+      }
+    } else {
+      setSugerenciasHijas([]);
+    }
   };
 
   const agregarObraHija = (obra) => {
@@ -355,9 +429,48 @@ const DetalleObra = () => {
             type="checkbox"
             label="En Seguimiento"
             checked={enSeguimiento}
-            onChange={() => setEnSeguimiento(!enSeguimiento)}
+            readOnly
             className="mt-3"
           />
+
+          {enSeguimiento && (
+            <>
+              <Form.Group as={Row} controlId="fSeg">
+                <Form.Label column sm="2">
+                  <strong>Fecha Seguimiento:</strong>
+                </Form.Label>
+                <Col sm="10">
+                  <Form.Control
+                    type="date"
+                    name="fSeg"
+                    value={
+                      filteredObra.fecha_seg
+                        ? new Date(filteredObra.fecha_seg)
+                            .toISOString()
+                            .slice(0, 10)
+                        : ""
+                    }
+                    readOnly
+                  />
+                </Col>
+              </Form.Group>
+
+              <Form.Group as={Row} controlId="descripcionSeg">
+                <Form.Label column sm="2">
+                  <strong>Motivo:</strong>
+                </Form.Label>
+                <Col sm="10">
+                  <Form.Control
+                    type="text"
+                    name="descripcionSeg"
+                    value={filteredObra.descripcion_seg || "Sin descripción"}
+                    readOnly
+                  />
+                </Col>
+              </Form.Group>
+            </>
+          )}
+
           {/* BUSCADOR DE OBRA PADRE Y OBRAS SUBORDINADAS */}
           <Form.Group controlId="relacioObras" className="mt-2">
             <Form.Label>
@@ -483,63 +596,340 @@ const DetalleObra = () => {
         <Accordion.Item eventKey="0">
           <Accordion.Header>Información General</Accordion.Header>
           <Accordion.Body>
-            <p>
-              <strong>Tipo:</strong> {filteredObra.desc_tipo_obra || ""}
-            </p>
-            <p>
-              <strong>Facturable:</strong> {filteredObra.facturable || ""}
-            </p>
-            <p>
-              <strong>Estado:</strong> {filteredObra.desc_estado_obra || ""}
-            </p>
-            <p>
-              <strong>Fecha de Alta:</strong>{" "}
-              {new Date(filteredObra.fecha_alta).toLocaleDateString("es-Es") ||
-                ""}
-            </p>
-            <p>
-              <strong>Usuario Alta:</strong>{" "}
-              {`${filteredObra.nombre_usuario || ""} ${
-                filteredObra.apellido_1_usuario || ""
-              } ${filteredObra.apellido_2_usuario || ""}`}
-            </p>
-            <p>
-              <strong>Fecha Prevista:</strong>{" "}
-              {filteredObra.fecha_prevista_fin || ""}
-            </p>
-            <p>
-              <strong>Número de Horas Previstas:</strong>{" "}
-              {filteredObra.horas_previstas || ""}
-            </p>
-            <p>
-              <strong>Gasto Previsto:</strong>{" "}
-              {filteredObra.gasto_previsto || ""}
-            </p>
-            <p>
-              <strong>Importe:</strong> {filteredObra.importe || ""}
-            </p>
-            <p>
-              <strong>Viabilidad:</strong> {filteredObra.viabilidad || ""}
-            </p>
-            <p>
-              <strong>Empresa:</strong> {filteredObra.nombre_empresa || ""}
-            </p>
-            <p>
-              <strong>Contacto:</strong>{" "}
-              {`${filteredObra.nombre_contacto || ""} ${
-                filteredObra.apellido_1_contacto || ""
-              } ${filteredObra.apellido_2_contacto || ""}`}
-            </p>
-            <p>
-              <strong>Complejo:</strong> {filteredObra.nombre_edificio || ""}
-            </p>
-            <p>
-              <strong>Observaciones:</strong> {filteredObra.observaciones || ""}
-            </p>
-            <p>
-              <strong>Observaciones Internas:</strong>{" "}
-              {filteredObra.observaciones_internas || ""}
-            </p>
+            <Form.Group as={Row} controlId="tipoObra">
+              <Form.Label column sm="2">
+                <strong>Tipo de Obra:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="select"
+                  name="tipoObra"
+                  value={filteredObra.tipo_obra || ""}
+                  readOnly
+                >
+                  {allTiposObra.length > 0 ? (
+                    allTiposObra.map((tipo) => (
+                      <option key={tipo.id_tipo} value={tipo.id_tipo}>
+                        {tipo.descripcion}
+                      </option>
+                    ))
+                  ) : (
+                    <option>Cargando tipos de obra...</option>
+                  )}
+                </Form.Control>
+              </Col>
+            </Form.Group>
+            <Form.Group as={Row} controlId="tipoFacturable">
+              <Form.Label column sm="2">
+                <strong>Facturable:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="select"
+                  name="tipoFacturable"
+                  value={filteredObra.facturable || ""}
+                  readOnly
+                >
+                  {allTiposFacturables.length > 0 ? (
+                    allTiposFacturables.map((tipo) => (
+                      <option key={tipo.id_tipo} value={tipo.id_tipo}>
+                        {tipo.descripcion}
+                      </option>
+                    ))
+                  ) : (
+                    <option>Cargando tipos facturables...</option>
+                  )}
+                </Form.Control>
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="estadoObra">
+              <Form.Label column sm="2">
+                <strong>Estado:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="select"
+                  name="estadoObra"
+                  value={filteredObra.estado_obra || ""}
+                  readOnly
+                >
+                  {allEstadosObra.length > 0 ? (
+                    allEstadosObra.map((estado) => (
+                      <option
+                        key={estado.codigo_estado}
+                        value={estado.codigo_estado}
+                      >
+                        {estado.descripcion_estado}
+                      </option>
+                    ))
+                  ) : (
+                    <option>Cargando estados de obra...</option>
+                  )}
+                </Form.Control>
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="fAlta">
+              <Form.Label column sm="2">
+                <strong>Fecha de Alta:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="date"
+                  name="fAlta"
+                  value={
+                    filteredObra.fecha_alta
+                      ? new Date(filteredObra.fecha_alta)
+                          .toISOString()
+                          .slice(0, 10)
+                      : ""
+                  }
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="usuarioAlta">
+              <Form.Label column sm="2">
+                <strong>Usuario Alta:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="select"
+                  name="usuarioAlta"
+                  value={filteredObra.codigo_usuario_alta || ""}
+                  readOnly
+                >
+                  {allUsuarios.length > 0 ? (
+                    allUsuarios.map((usuario) => (
+                      <option
+                        key={usuario.codigo_usuario}
+                        value={usuario.codigo_usuario}
+                      >
+                        {`(${usuario.codigo_firma}) ${usuario.nombre || ""} ${
+                          usuario.apellido1 || ""
+                        } ${usuario.apellido2 || ""}`}
+                      </option>
+                    ))
+                  ) : (
+                    <option>Cargando usuarios...</option>
+                  )}
+                </Form.Control>
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="fFin">
+              <Form.Label column sm="2">
+                <strong>Fecha Prevista:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="date"
+                  name="fFin"
+                  value={
+                    filteredObra.fecha_prevista_fin
+                      ? new Date(filteredObra.fecha_prevista_fin)
+                          .toISOString()
+                          .slice(0, 10)
+                      : ""
+                  }
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+
+            <div className="d-flex align-items-center mt-3">
+              <Form.Check
+                type="checkbox"
+                label="Ofertado:"
+                checked={ofertado}
+                readOnly
+                className="me-3"
+              />
+
+              {ofertado && (
+                <Form.Control
+                  type="date"
+                  name="fOferta"
+                  value={
+                    filteredObra.fecha_oferta
+                      ? new Date(filteredObra.fecha_oferta)
+                          .toISOString()
+                          .slice(0, 10)
+                      : ""
+                  }
+                  readOnly
+                />
+              )}
+            </div>
+
+            <Form.Group as={Row} controlId="horasPrevistas">
+              <Form.Label column sm="2">
+                <strong>Horas Previstas:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="number"
+                  name="horasPrevistas"
+                  value={filteredObra.horas_previstas || 0}
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="gastoPrevisto">
+              <Form.Label column sm="2">
+                <strong>Gasto Previsto:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="number"
+                  name="gastoPrevisto"
+                  value={filteredObra.gasto_previsto || 0}
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="importe">
+              <Form.Label column sm="2">
+                <strong>Importe:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="number"
+                  name="importe"
+                  value={filteredObra.importe || 0}
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="viabilidad">
+              <Form.Label column sm="2">
+                <strong>Viabilidad:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="number"
+                  name="viabilidad"
+                  value={filteredObra.viabilidad || 0}
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="empresa">
+              <Form.Label column sm="2">
+                <strong>Empresa:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="select"
+                  name="empresa"
+                  value={filteredObra.id_empresa || ""}
+                  readOnly
+                >
+                  {allEmpresas.length > 0 ? (
+                    allEmpresas.map((empresa) => (
+                      <option
+                        key={empresa.id_empresa}
+                        value={empresa.id_empresa}
+                      >
+                        {empresa.nombre}
+                      </option>
+                    ))
+                  ) : (
+                    <option>Cargando empresas...</option>
+                  )}
+                </Form.Control>
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="contacto">
+              <Form.Label column sm="2">
+                <strong>Contacto:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="select"
+                  name="contacto"
+                  value={filteredObra.id_contacto || ""}
+                  readOnly
+                >
+                  {allContactosEmpresa.length > 0 ? (
+                    allContactosEmpresa.map((contacto) => (
+                      <option
+                        key={contacto.id_contacto}
+                        value={contacto.id_contacto}
+                      >
+                        {`${contacto.nombre_contacto} ${contacto.apellido1} ${contacto.apellido2}`}
+                      </option>
+                    ))
+                  ) : (
+                    <option>Cargando empresas...</option>
+                  )}
+                </Form.Control>
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="edificio">
+              <Form.Label column sm="2">
+                <strong>Complejo:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  as="select"
+                  name="edificio"
+                  value={filteredObra.id_edificio || ""}
+                  readOnly
+                >
+                  {allEdificios.length > 0 ? (
+                    allEdificios.map((edificio) => (
+                      <option
+                        key={edificio.id_edificio}
+                        value={edificio.id_edificio}
+                      >
+                        {edificio.nombre}
+                      </option>
+                    ))
+                  ) : (
+                    <option>Cargando complejos...</option>
+                  )}
+                </Form.Control>
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="observaciones">
+              <Form.Label column sm="2">
+                <strong>Observaciones:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="text"
+                  name="observaciones"
+                  value={filteredObra.observaciones || "Sin observaciones"}
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
+
+            <Form.Group as={Row} controlId="observacionesInternas">
+              <Form.Label column sm="2">
+                <strong>Observaciones Internas:</strong>
+              </Form.Label>
+              <Col sm="10">
+                <Form.Control
+                  type="text"
+                  name="observacionesInternas"
+                  value={
+                    filteredObra.observaciones_internas || "Sin observaciones"
+                  }
+                  readOnly
+                />
+              </Col>
+            </Form.Group>
           </Accordion.Body>
         </Accordion.Item>
       </Accordion>
@@ -558,7 +948,6 @@ const DetalleObra = () => {
                   <th>Fecha</th>
                   <th>Importe</th>
                   <th>Facturado</th>
-                  <th>Observaciones</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -567,7 +956,9 @@ const DetalleObra = () => {
                   pedidosObra.map((pedido, index) => (
                     <tr key={index}>
                       <td>{pedido.codigo_pedido}</td>
-                      <td>{pedido.fecha}</td>
+                      <td>
+                        {new Date(pedido.fecha).toLocaleDateString("es-Es")}
+                      </td>
                       <td>{pedido.importe}</td>
                       <td>
                         {rentabilidadObra
@@ -576,13 +967,17 @@ const DetalleObra = () => {
                             100
                           : "No hay datos de rentabilidad"}
                       </td>{" "}
-                      {/* Aquí se toma el fP de la obra para cada pedido */}
-                      <td>{pedido.observaciones}</td>
                       <td>
-                        <Button variant="info" className="me-2">
-                          Detalle
-                        </Button>
-                        <Button variant="danger">Eliminar</Button>
+                        <p>
+                          <Button variant="info" size="sm" className="me-2">
+                            Detalle
+                          </Button>
+                        </p>
+                        <p>
+                          <Button variant="danger" size="sm">
+                            Eliminar
+                          </Button>
+                        </p>
                       </td>
                     </tr>
                   ))
@@ -622,7 +1017,6 @@ const DetalleObra = () => {
                   <th>Fecha</th>
                   <th>Cobrado</th>
                   <th>Importe</th>
-                  <th>Observaciones</th>
                   <th>Acciones</th>
                 </tr>
               </thead>
@@ -641,12 +1035,17 @@ const DetalleObra = () => {
                         )}
                       </td>
                       <td>{factura.importe}</td>
-                      <td>{factura.observaciones}</td>
                       <td>
-                        <Button variant="info" className="me-2">
-                          Detalle
-                        </Button>
-                        <Button variant="danger">Eliminar</Button>
+                        <p>
+                          <Button variant="info" size="sm" className="me-2">
+                            Detalle
+                          </Button>
+                        </p>
+                        <p>
+                          <Button variant="danger" size="sm">
+                            Eliminar
+                          </Button>
+                        </p>
                       </td>
                     </tr>
                   ))
@@ -926,10 +1325,18 @@ const DetalleObra = () => {
                         </td>
                         <td>{gasto.usuario_alta}</td>
                         <td>{gasto.tipo_gasto}</td>
-                        <td>{gasto.fecha_validacion}</td>
+                        <td>
+                          {new Date(gasto.fecha_validacion).toLocaleDateString(
+                            "es-Es"
+                          )}
+                        </td>
                         <td>{gasto.usuario_validacion}</td>
                         <td>{gasto.pagado_visa ? "[SÍ]" : "[NO]"}</td>
-                        <td>{gasto.fecha_pago}</td>
+                        <td>
+                          {new Date(gasto.fecha_pago).toLocaleDateString(
+                            "es-Es"
+                          )}
+                        </td>
                         <td>{gasto.cantidad}</td>
                         <td>{gasto.importe}</td>
                         <td>{gasto.importe * gasto.cantidad}</td>
@@ -1178,10 +1585,18 @@ const DetalleObra = () => {
                         </td>
                         <td>{gasto.usuario_alta}</td>
                         <td>{gasto.tipo_gasto}</td>
-                        <td>{gasto.fecha_validacion}</td>
+                        <td>
+                          {new Date(gasto.fecha_validacion).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
                         <td>{gasto.usuario_validacion}</td>
                         <td>{gasto.pagado_visa ? "[SÍ]" : "[NO]"}</td>
-                        <td>{gasto.fecha_pago}</td>
+                        <td>
+                          {new Date(gasto.fecha_pago).toLocaleDateString(
+                            "es-Es"
+                          )}
+                        </td>
                         <td>{gasto.cantidad}</td>
                         <td>{gasto.importe}</td>
                         <td>{gasto.importe * gasto.cantidad}</td>

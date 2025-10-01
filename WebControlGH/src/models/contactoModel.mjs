@@ -14,7 +14,7 @@ export class ContactoModel {
     LEFT JOIN 
         empresas_contactos AS e_c ON c.id_contacto = e_c.id_contacto
     WHERE
-        e_c.id_empresa = ?
+        e_c.id_empresa = ? OR c.id_contacto = 1
     ORDER BY c.nombre_contacto
   `;
 

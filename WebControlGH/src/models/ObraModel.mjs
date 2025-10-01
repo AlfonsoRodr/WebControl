@@ -95,6 +95,21 @@ export class ObraModel {
     return result;
   }
 
+  static async getByDescripcion({ descripcionObra }) {
+    const query = `
+    SELECT
+      id_obra,
+      codigo_obra,
+      descripcion_obra
+    FROM
+      obras
+    WHERE
+      descripcion_obra LIKE CONCAT('%', ?, '%')`;
+    
+    const [result] = await db.query(query, descripcionObra)
+    return result;
+  }
+
   static async create({ input }) {
     const validatedData = validateObra(input);
 

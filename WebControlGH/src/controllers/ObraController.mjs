@@ -26,6 +26,16 @@ export class ObraController {
     }
   }
 
+  static async getByDescripcion(req, res, next) {
+    try {
+      const { descripcionObra } = req.query;
+      const obras = await ObraModel.getByDescripcion({ descripcionObra });
+      res.json({ success: true, data: obras });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async create(req, res, next) {
     try {
       const input = req.body;
