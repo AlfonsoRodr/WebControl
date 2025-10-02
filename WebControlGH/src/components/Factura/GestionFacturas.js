@@ -19,16 +19,16 @@ let allFacturas = null;
 function GestionFacturas() {
 	const [open, setOpen] = useState(false);
 	const [formData, setFormData] = useState({
-		idObra: "",
-		idFacturasCompras: "",
+		codigo_obra: "",
+		num_factura: "",
 		importe: "",
 		fechaAlta: "",
 		codigoUsuarioAlta: "",
-        fechaActualizacion: "",
-        fechaBaja: "",
-        codigoUsuarioBaja: "",
-        observaciones: "",
-        version: ""
+		fechaActualizacion: "",
+		fechaBaja: "",
+		codigoUsuarioBaja: "",
+		observaciones: "",
+		version: ""
 	});
 
 	const [filteredFacturas, setFilteredFacturas] = useState([]);
@@ -46,8 +46,8 @@ function GestionFacturas() {
 		const endpoint = "http://localhost:3002/api/facturas";
 		try {
 			const res = await axios.get(endpoint);
-			allFacturas = res.data;
-			setFilteredFacturas(res.data);
+			allFacturas = res.data.data;
+			setFilteredFacturas(res.data.data);
 		}
 		catch (err) {
 			console.error("Error al obtener facturas", err);
@@ -84,7 +84,7 @@ function GestionFacturas() {
 			await Promise.all(deletePromises);
 			// Si todo ha ido bien devolvemos true
 			return true;
-		} 
+		}
 		catch (error) {
 			console.log("Error al eliminar facturas");
 			// Si ha habido un fallo en el borrado de alguna de las facturas
@@ -438,12 +438,13 @@ function GestionFacturas() {
 						<th>Facturas Compras</th>
 						<th>Importe</th>
 						<th>Fecha Alta</th>
-						<th>Usuario Alta</th>
 						<th>Fecha Actu</th>
 						<th>Fecha Baja</th>
+						<th>Usuario Alta</th>
 						<th>Usuario Baja</th>
 						<th>Observaciones</th>
 						<th>Versión</th>
+						<th>Detalles</th>
 					</tr>
 				</thead>
 				<tbody>
@@ -457,16 +458,16 @@ function GestionFacturas() {
 										onChange={() => handleCheckboxChange(factura.id)}
 									/>
 								</td>
-								<td>{formData.idObra}</td>
-								<td>{formData.idFacturasCompras}</td>
-								<td>{formData.importe}</td>
-								<td>{formData.fechaAlta}</td>
-								<td>{formData.codigoUsuarioAlta}</td>
-								<td>{formData.fechaActualizacion}</td>
-								<td>{formData.fechaBaja}</td>
-								<td>{formData.codigoUsuarioBaja}</td>
-								<td>{formData.observaciones}</td>
-								<td>{formData.version}</td>
+								<td>{factura.codigo_obra ?? "-"}</td>
+								<td>{factura.num_factura ?? "-"}</td>
+								<td>{factura.importe}</td>
+								<td>{factura.fecha_alta ? new Date(factura.fecha_alta).toLocaleDateString() : "-"}</td>
+								<td>{factura.fecha_actualizacion ? new Date(factura.fecha_actualizacion).toLocaleDateString() : "-"}</td>
+								<td>{factura.fecha_baja ? new Date(factura.fecha_baja).toLocaleDateString() : "-"}</td>
+								<td>{factura.codigo_usuario_alta ?? "-"}</td>
+								<td>{factura.codigo_usuario_baja ?? "-"}</td>
+								<td>{factura.observaciones ?? "-"}</td>
+								<td>{factura.version}</td>
 								<td>
 									<Button
 										variant="info"

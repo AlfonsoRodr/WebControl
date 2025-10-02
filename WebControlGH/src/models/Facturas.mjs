@@ -5,8 +5,22 @@ export class FacturasModel {
     static async getAll() {
         const [results] = await db.query(
             `SELECT 
-                importe, fecha_alta, codigo_usuario_alta, fecha_actualizacion, fecha_baja, 
-                codigo_usuario_baja, observaciones, version FROM facturascompras_obra`
+            f.id,
+            f.id_obra,
+            o.codigo_obra AS codigo_obra,
+            f.id_facturascompras,
+            fc.numero AS num_factura,
+            f.importe,
+            f.fecha_alta,
+            f.codigo_usuario_alta,
+            f.fecha_actualizacion,
+            f.fecha_baja,
+            f.codigo_usuario_baja,
+            f.observaciones,
+            f.version
+            FROM facturascompras_obra f
+            LEFT JOIN obras o ON f.id_obra = o.id_obra
+            LEFT JOIN facturascompras fc ON f.id_facturascompras = fc.id`
         );
         return results;
     }
