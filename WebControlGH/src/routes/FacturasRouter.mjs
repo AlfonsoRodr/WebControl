@@ -6,6 +6,7 @@ export const facturasRouter = Router();
 
 facturasRouter.get("/", FacturasController.getAll);
 facturasRouter.get("/:id", FacturasController.getById);
+facturasRouter.get("/obra/:idObra", FacturasController.getByObra);
 facturasRouter.post("/", FacturasController.create);
 facturasRouter.patch("/:id", FacturasController.update);
 facturasRouter.delete("/:id", FacturasController.delete);

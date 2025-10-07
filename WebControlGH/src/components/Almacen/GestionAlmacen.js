@@ -6,7 +6,11 @@ function GestionAlmacen() {
   const [productos, setProductos] = useState([]);
   const [search, setSearch] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [formData, setFormData] = useState({ nombre: "", cantidad: "", ubicacion: "" });
+  const [formData, setFormData] = useState({
+    nombre: "",
+    cantidad: "",
+    ubicacion: "",
+  });
   const [editId, setEditId] = useState(null);
 
   useEffect(() => {
@@ -56,11 +60,15 @@ function GestionAlmacen() {
   };
 
   const handleGuardar = async () => {
-    if (!formData.nombre || !formData.cantidad) return alert("Nombre y cantidad son obligatorios");
+    if (!formData.nombre || !formData.cantidad)
+      return alert("Nombre y cantidad son obligatorios");
 
     try {
       if (editId) {
-        await axios.put(`http://localhost:3002/api/inventario/${editId}`, formData);
+        await axios.put(
+          `http://localhost:3002/api/inventario/${editId}`,
+          formData
+        );
       } else {
         await axios.post("http://localhost:3002/api/inventario", formData);
       }
@@ -84,7 +92,9 @@ function GestionAlmacen() {
           className="me-2"
         />
         <Button onClick={handleSearch}>Buscar</Button>
-        <Button className="ms-auto" onClick={handleAgregar}>Agregar Producto</Button>
+        <Button className="ms-auto" onClick={handleAgregar}>
+          Agregar Producto
+        </Button>
       </div>
 
       <Table striped bordered hover>
@@ -105,8 +115,20 @@ function GestionAlmacen() {
               <td>{prod.cantidad}</td>
               <td>{prod.ubicacion}</td>
               <td>
-                <Button size="sm" variant="warning" onClick={() => handleEditar(prod)}>Editar</Button>{' '}
-                <Button size="sm" variant="danger" onClick={() => handleEliminar(prod.id)}>Eliminar</Button>
+                <Button
+                  size="sm"
+                  variant="warning"
+                  onClick={() => handleEditar(prod)}
+                >
+                  Editar
+                </Button>{" "}
+                <Button
+                  size="sm"
+                  variant="danger"
+                  onClick={() => handleEliminar(prod.id)}
+                >
+                  Eliminar
+                </Button>
               </td>
             </tr>
           ))}
@@ -116,7 +138,9 @@ function GestionAlmacen() {
       {/* Modal de Agregar/Editar */}
       <Modal show={showModal} onHide={() => setShowModal(false)}>
         <Modal.Header closeButton>
-          <Modal.Title>{editId ? "Editar Producto" : "Agregar Producto"}</Modal.Title>
+          <Modal.Title>
+            {editId ? "Editar Producto" : "Agregar Producto"}
+          </Modal.Title>
         </Modal.Header>
         <Modal.Body>
           <Form>
@@ -148,7 +172,9 @@ function GestionAlmacen() {
           </Form>
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={() => setShowModal(false)}>Cancelar</Button>
+          <Button variant="secondary" onClick={() => setShowModal(false)}>
+            Cancelar
+          </Button>
           <Button variant="primary" onClick={handleGuardar}>
             {editId ? "Guardar Cambios" : "Agregar"}
           </Button>

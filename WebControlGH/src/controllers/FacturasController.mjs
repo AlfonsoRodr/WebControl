@@ -10,6 +10,18 @@ export class FacturasController {
     }
   }
 
+  static async getByObra(req, res, next) {
+    try {
+      const { idObra } = req.params;
+      const facturas = await FacturasModel.getByObra({
+        idObra: Number(idObra),
+      });
+      res.json({ success: true, data: facturas });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async getById(req, res, next) {
     try {
       const { id } = req.params;

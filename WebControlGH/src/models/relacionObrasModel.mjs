@@ -23,7 +23,10 @@ export class RelacionObrasModel {
     SELECT
         r.id_obraHija,
         o.codigo_obra,
-        o.descripcion_obra
+        o.descripcion_obra,
+        o.horas_previstas,
+        o.gasto_previsto,
+        o.importe
     FROM 
         relacionobras AS r
     LEFT JOIN
@@ -31,7 +34,7 @@ export class RelacionObrasModel {
     WHERE
         r.id_obraPadre = ?`;
 
-    const [result] = await db.query(query, [idObra]);
+    const [result] = await db.query(query, [idObra, idObra]);
     return result;
   }
 

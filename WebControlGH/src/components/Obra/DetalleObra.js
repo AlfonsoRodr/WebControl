@@ -9,6 +9,7 @@ import {
   Card,
   Accordion,
   ListGroup,
+  Modal,
 } from "react-bootstrap";
 import axios, { all } from "axios";
 
@@ -17,6 +18,8 @@ const DetalleObra = () => {
   const navigate = useNavigate();
 
   // ------------- ESTADOS PARA EL FORMULARIO ---------- \\
+
+  //#region
 
   // Para mostrar todos los tipos de obra
   const [allTiposObra, setAllTiposObra] = useState([]);
@@ -33,7 +36,11 @@ const DetalleObra = () => {
   // Para mostrar los edificios
   const [allEdificios, setAllEdificios] = useState([]);
 
+  //#endregion
+
   // ------------- ESTADOS DE LA OBRA ------------------ \\
+
+  //#region
 
   // Definir el estado para el checkbox "En Seguimiento"
   const [enSeguimiento, setEnSeguimiento] = useState(false);
@@ -45,8 +52,12 @@ const DetalleObra = () => {
   const [rentabilidadObra, setRentabilidadObra] = useState({});
   // Estado para las facturas asociadas a una obra
   const [facturasObra, setFacturasObra] = useState([]);
+  // Estado para las facturas asociadass a las obras subordinadas (SI SE NECESITA EN EL FUTURO)
+  const [facturasObrasHijas, setFacturasObrasHijas] = useState([]);
   // Estado para los pedidos asociados a una obra
   const [pedidosObra, setPedidosObra] = useState([]);
+  // Estado para los pedidos asociados a las obras subordinadas (SI SE NECESITA EN EL FUTURO)
+  const [pedidosObrasHija, setPedidosObrasHijas] = useState([]);
   // Estado para los gastos asociados a una obra
   const [gastosObra, setGastosObra] = useState([]);
   // Estado para los gastos asociados a las obras hijas
@@ -59,12 +70,21 @@ const DetalleObra = () => {
   const [horasExtraObra, setHorasExtraObra] = useState([]);
   // Estado para el listado de horas extra asociadas a las obras hijas
   const [horasExtraObrasHijas, setHorasExtraObrasHijas] = useState([]);
+  // Estado para el listado de movimientos de almacén asociados a una obra
+  const [movimientosAlmacenObra, setMovimientosAlmacenObra] = useState([]);
+  // Estado para las facturas de las compras asociadas a una obra
+  const [facturasComprasObra, setFacturasComprasObra] = useState([]);
+
+  //#endregion
+
+  //#region ESTADOS FORMULARIO OBRAS
+  const [tipoObra, setTipoObra] = useState({ id: "", desc: "" });
+  const [estadoObra, setEstadoObra] = useState({ id: "", desc: "" });
+  //#endregion
 
   // --------- ESTADOS PARA LA BUSQUEDA DE OBRA PADRE Y SUBORDINADAS --------- \\
-  // Estado para la obra padre
-  const [obraPadre, setObraPadre] = useState({});
-  // Estado para las obras hijas
-  const [obrasHijas, setObrasHijas] = useState([]);
+
+  //#region
 
   const [obraPadreBusqueda, setObraPadreBusqueda] = useState("");
   const [sugerenciasPadre, setSugerenciasPadre] = useState([]);
@@ -74,7 +94,11 @@ const DetalleObra = () => {
   const [sugerenciasHijas, setSugerenciasHijas] = useState([]);
   const [obrasHijasSeleccionadas, setObrasHijasSeleccionadas] = useState([]);
 
-  // ----------------------------------------------------------------------------- \\
+  //#endregion
+
+  // ------------------- ESTADOS AUXILIARES --------------------------------- \\
+
+  //#region
 
   // Estado para los tipos de gastos
   const [tiposGastos, setTiposGastos] = useState([]);
@@ -88,8 +112,57 @@ const DetalleObra = () => {
   const [mostrarGastosHijas, setMostrarGastosHijas] = useState(false);
   // Estado para mostrar la lista de horas de obras subordinadas
   const [mostrarHorasHijas, setMostrarHorasHijas] = useState(false);
+  // Estado para la modal de detalles de pedidos
+  const [showModalPedidos, setShowModalPedidos] = useState(false);
+  // Estado para la modal de detalles de facturas
+  const [showModalFacturas, setShowModalFacturas] = useState(false);
+
+  //#endregion
+
+  // ------------------- ESTADOS PARA LOS FORMS -------------------------- \\
+
+  //#region
+
+  const [formPedidos, setFormPedidos] = useState({
+    fechaPedido: "",
+    codigoPedido: "",
+    posicion: "",
+    importe: "",
+    observaciones: "",
+    idObra: "",
+  });
+
+  const [formFacturas, setFormFacturas] = useState({
+    idPedido: "",
+    codigoPedido: "",
+    fechaFactura: "",
+    codigo: "",
+    posicion: "",
+    importe: "",
+    conceptoFactura: "",
+    conceptoLinea: "",
+    observaciones: "",
+    idObra: "",
+    cobrado: false,
+    fechaCobro: "",
+  });
+
+  const [editIDPedido, setEditIDPedido] = useState(null);
+  const [editIDFactura, setEditIDFactura] = useState(null);
+
+  //#endregion
+
+  // ------------------- ESTADOS PARA HABILITAR CAMBIOS ------------------ \\
+
+  //#region
+
+  const [editarObra, setEditarObra] = useState(false);
+
+  //#endregion
 
   // ----------------------- FETCH DE DATOS ------------------------------- \\
+
+  //#region
 
   // Fetch de la obra
   const fetchObra = async (idObra) => {
@@ -100,6 +173,10 @@ const DetalleObra = () => {
       fetchContactosEmpresa(res.data.data[0].id_empresa);
       setEnSeguimiento(res.data.data[0].fecha_seg ? true : false);
       setOfertado(res.data.data[0].fecha_oferta ? true : false);
+      setTipoObra({
+        id: res.data.data[0].tipo_obra,
+        desc: res.data.data[0].desc_tipo_obra,
+      });
     } catch (err) {
       console.error(`Error al obtener la obra - ${err}`);
     }
@@ -117,93 +194,81 @@ const DetalleObra = () => {
   };
 
   // Fetch de las facturas asociadas a una obra
-  const fetchFacturas = async (idObra) => {
-    const endpoint = `http://localhost:3002/api/ecoFactura/${idObra}`;
+  const fetchFacturas = async (idsObras, tipo) => {
+    const endpoint = `http://localhost:3002/api/ecoFactura/buscar`;
     try {
-      const res = await axios.get(endpoint);
-      setFacturasObra(res.data.data);
+      const res = await axios.post(endpoint, { idsObras });
+      tipo === "Padre"
+        ? setFacturasObra(res.data.data)
+        : setFacturasObrasHijas(res.data.data);
     } catch (err) {
-      console.error(`Error al obtener las facturas de la obra - ${err}`);
+      console.error(
+        `Error al obtener las facturas de la obra (${tipo}) - ${err}`
+      );
     }
   };
 
   // Fetch de los pedidos asociados a una obra
-  const fetchPedidos = async (idObra) => {
-    const endpoint = `http://localhost:3002/api/ecoPedido/${idObra}`;
+  const fetchPedidos = async (idsObras, tipo) => {
+    const endpoint = `http://localhost:3002/api/ecoPedido/buscar`;
     try {
-      const res = await axios.get(endpoint);
-      setPedidosObra(res.data.data);
+      const res = await axios.post(endpoint, { idsObras });
+      tipo === "Padre"
+        ? setPedidosObra(res.data.data)
+        : setPedidosObrasHijas(res.data.data);
     } catch (err) {
-      console.error(`Error al obtener los pedidos de la obra - ${err}`);
+      console.error(
+        `Error al obtener los pedidos de la obra (${tipo}) - ${err}`
+      );
     }
   };
 
   // Fetch de los gastos asociados a una obra
-  const fetchGastos = async (idsObra) => {
+  const fetchGastos = async (idsObra, tipo) => {
     const endpoint = `http://localhost:3002/api/gastos/buscar`;
     try {
       const res = await axios.post(endpoint, { idsObra });
-      setGastosObra(res.data.data);
-      getTiposGastos(res.data.data, "Padre");
+      if (tipo === "Padre") {
+        setGastosObra(res.data.data);
+        getTiposGastos(res.data.data, "Padre");
+      } else {
+        setGastosObrasHijas(res.data.data);
+        getTiposGastos(res.data.data, "Hijas");
+      }
     } catch (err) {
-      console.error(`Error al obtener los gastos de la obra - ${err}`);
-    }
-  };
-
-  // Fetch de los gastos asociados a una obra
-  const fetchGastosHijas = async (idsObra) => {
-    const endpoint = `http://localhost:3002/api/gastos/buscar`;
-    try {
-      const res = await axios.post(endpoint, { idsObra });
-      setGastosObrasHijas(res.data.data);
-      getTiposGastos(res.data.data, "Hijas");
-    } catch (err) {
-      console.error(`Error al obtener los gastos de las obras hijas - ${err}`);
+      console.error(
+        `Error al obtener los gastos de la obra (${tipo}) - ${err}`
+      );
     }
   };
 
   // Fetch de las horas asociadas a una obra
-  const fetchHoras = async (idsObra) => {
+  const fetchHoras = async (idsObra, tipo) => {
     const endpoint = `http://localhost:3002/api/horas/buscar`;
     try {
       const res = await axios.post(endpoint, { idsObra });
-      setHorasObra(res.data.data);
+      tipo === "Padre"
+        ? setHorasObra(res.data.data)
+        : setHorasObrasHijas(res.data.data);
     } catch (error) {
-      console.error(`Error al obtener las horas de la obra - ${error}`);
-    }
-  };
-
-  // Fetch de las horas asociadas a las obras subordinadas
-  const fetchHorasHijas = async (idsObra) => {
-    const endpoint = `http://localhost:3002/api/horas/buscar`;
-    try {
-      const res = await axios.post(endpoint, { idsObra });
-      setHorasObrasHijas(res.data.data);
-    } catch (error) {
-      console.error(`Error al obtener las horas de las obras hijas - ${error}`);
+      console.error(
+        `Error al obtener las horas de la obra (${tipo}) - ${error}`
+      );
     }
   };
 
   // Fetch de las horas extra asociadas a una obra
-  const fetchHorasExtra = async (idsObra) => {
+  const fetchHorasExtra = async (idsObra, tipo) => {
     const endpoint = `http://localhost:3002/api/gastos/horas-extra/buscar`;
     try {
       const res = await axios.post(endpoint, { idsObra });
+      tipo === "Padre"
+        ? setHorasExtraObra(res.data.data)
+        : setHorasExtraObrasHijas(res.data.data);
       setHorasExtraObra(res.data.data);
     } catch (error) {
-      console.error(`Error al obtener las horas extra de la obra - ${error}`);
-    }
-  };
-
-  // Fetch de las horas extra de las obras subordinadas
-  const fetchHorasExtraHijas = async (idsObra) => {
-    const endpoint = `http://localhost:3002/api/gastos/horas-extra/buscar`;
-    try {
-      const res = await axios.post(endpoint, { idsObra });
-      setHorasExtraObrasHijas(res.data.data);
-    } catch (error) {
       console.error(
-        `Error al obtener las horas extra de las obras hijas - ${error}`
+        `Error al obtener las horas extra de la obra (${tipo}) - ${error}`
       );
     }
   };
@@ -213,7 +278,6 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/relacion-obras/padre/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setObraPadre(res.data.data[0]);
       setObraPadreSeleccionada(res.data.data[0]);
     } catch (error) {
       console.error(`Error al obtener la obra padre - ${error}`);
@@ -225,15 +289,16 @@ const DetalleObra = () => {
     const endpoint = `http://localhost:3002/api/relacion-obras/hijas/${idObra}`;
     try {
       const res = await axios.get(endpoint);
-      setObrasHijas(res.data.data);
       setObrasHijasSeleccionadas(res.data.data);
       // IDs de las obras hijas
       const idsObrasHijas = res.data.data.map(
         (obraHija) => obraHija.id_obraHija
       );
-      fetchGastosHijas(idsObrasHijas);
-      fetchHorasHijas(idsObrasHijas);
-      fetchHorasExtraHijas(idsObrasHijas);
+      fetchGastos(idsObrasHijas, "Hijas");
+      fetchHoras(idsObrasHijas, "Hijas");
+      fetchHorasExtra(idsObrasHijas, "Hijas");
+      fetchPedidos(idsObrasHijas, "Hijas");
+      fetchFacturas(idsObrasHijas, "Hijas");
     } catch (error) {
       console.error(`Error al obtener las obras hijas - ${error}`);
     }
@@ -273,20 +338,46 @@ const DetalleObra = () => {
     }
   };
 
-  // ---------------------------------------------------------------------- \\
+  const fetchMovimientosAlmacen = async (idObra) => {
+    const endpoint = `http://localhost:3002/api/movimientos-almacen/obra/${idObra}`;
+    try {
+      const res = await axios.get(endpoint);
+      setMovimientosAlmacenObra(res.data.data);
+    } catch (error) {
+      console.error(`Error al obtener los movimientos de almacén - ${error}`);
+    }
+  };
 
+  const fetchFacturasCompras = async (idObra) => {
+    const endpoint = `http://localhost:3002/api/facturas/obra/${idObra}`;
+    try {
+      const res = await axios.get(endpoint);
+      setFacturasComprasObra(res.data.data);
+    } catch (error) {
+      console.error(`Error al obtener las facturas de compras - ${error}`);
+    }
+  };
+
+  //#endregion
+
+  // ------------------------- USE EFFECT ------------------------- \\
+  //#region
   useEffect(() => {
     fetchObra(idObra);
     fetchRentabilidad(idObra);
-    fetchFacturas(idObra);
-    fetchPedidos(idObra);
-    fetchGastos([idObra]);
-    fetchHoras([idObra]);
-    fetchHorasExtra([idObra]);
+    fetchFacturas([idObra], "Padre");
+    fetchPedidos([idObra], "Padre");
+    fetchGastos([idObra], "Padre");
+    fetchHoras([idObra], "Padre");
+    fetchHorasExtra([idObra], "Padre");
     fetchObraPadre(idObra);
     fetchObrasHijas(idObra);
     fetchDatosFormulario();
+    fetchMovimientosAlmacen(idObra);
+    fetchFacturasCompras(idObra);
   }, []);
+
+  //#endregion
 
   if (!filteredObra) {
     return <h2>Obra no encontrada</h2>;
@@ -294,11 +385,181 @@ const DetalleObra = () => {
 
   // ----------------------------- HANDLERS y FUNCIONES AUXILIARES ----------------------- \\
 
+  //#region ADICION/EDICION/ELIMINACION DE PEDIDOS
+
+  const handleAgregarPedido = () => {
+    setFormPedidos({
+      fechaPedido: new Date(),
+      codigoPedido: "",
+      posicion: "",
+      importe: "",
+      observaciones: "",
+      idObra: filteredObra.id_obra,
+    });
+    setEditIDPedido(null);
+    setShowModalPedidos(true);
+  };
+
+  const handleGuardarPedido = async () => {
+    // TODO: AÑADIR VALIDACIONES DE LOS CAMPOS
+    if (
+      !formPedidos.codigoPedido ||
+      !formPedidos.fechaPedido ||
+      !formPedidos.importe ||
+      !formPedidos.posicion
+    ) {
+      return alert("Faltan campos");
+    }
+    try {
+      // EDICION
+      if (editIDPedido) {
+        await axios.put(
+          `http://localhost:3002/api/ecoPedido/${editIDPedido}`,
+          formPedidos
+        );
+      }
+      // GUARDADO
+      else {
+        await axios.post(`http://localhost:3002/api/ecoPedido`, formPedidos);
+      }
+      setShowModalPedidos(false);
+      fetchPedidos([idObra], "Padre");
+    } catch (error) {
+      console.error(`Error al guardar el pedido - ${error}`);
+    }
+  };
+
+  const handleEditarPedido = (pedido) => {
+    setFormPedidos({
+      fechaPedido: pedido.fecha,
+      codigoPedido: pedido.codigo_pedido,
+      posicion: pedido.posicion,
+      importe: pedido.importe,
+      observaciones: pedido.observaciones,
+    });
+    setEditIDPedido(pedido.id_pedido);
+    setShowModalPedidos(true);
+  };
+
   // Función para eliminar un pedido
-  const handleDeletePedido = (codigoPedido) => {};
+  const handleDeletePedido = async (id) => {
+    if (window.confirm("¿Estás seguro de eliminar este pedido?")) {
+      try {
+        await axios.delete(`http://localhost:3002/api/ecoPedido/${id}`);
+        fetchPedidos([idObra], "Padre");
+      } catch (error) {
+        console.error(`Error al eliminar el pedido - ${error}`);
+      }
+    }
+  };
+
+  const handleChangeFormPedidos = (e) => {
+    setFormPedidos((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+  };
+
+  //#endregion
+
+  //#region ADICION/EDICION/ELIMINACION DE FACTURAS Y CAMBIOS EN EL FORM
+
+  const handleAgregarFactura = () => {
+    setFormFacturas({
+      idPedido: "",
+      codigoPedido: "",
+      fechaFactura: new Date(),
+      codigo: "",
+      posicion: "",
+      importe: "",
+      conceptoFactura: "",
+      conceptoLinea: "",
+      observaciones: "",
+      idObra: filteredObra.id_obra,
+      fechaCobro: new Date(),
+    });
+    setEditIDFactura(null);
+    setShowModalFacturas(true);
+  };
+
+  const handleEditarFactura = (factura) => {
+    setFormFacturas({
+      idPedido: factura.id_pedido,
+      codigoPedido: factura.codigo_pedido,
+      fechaFactura: factura.fecha,
+      codigo: factura.codigo_factura,
+      posicion: factura.posicion,
+      importe: factura.importe,
+      conceptoFactura: factura.concepto_factura,
+      conceptoLinea: factura.concepto_linea,
+      observaciones: factura.observaciones,
+      cobrado: factura.fecha_cobro ? true : false,
+      fechaCobro: factura.fecha_cobro ?? new Date(),
+    });
+    setEditIDFactura(factura.id_factura);
+    setShowModalFacturas(true);
+  };
 
   // Función para eliminar una factura
-  const handleDeleteFactura = (codigoFactura) => {};
+  const handleDeleteFactura = async (id) => {
+    if (window.confirm("¿Estás seguro de eliminar esta factura?")) {
+      try {
+        await axios.delete(`http://localhost:3002/api/ecoFactura/${id}`);
+        fetchFacturas([idObra], "Padre");
+      } catch (error) {
+        console.error(`Error al eliminar la factura - ${error}`);
+      }
+    }
+  };
+
+  const handleChangeFormFacturas = (e) => {
+    if (e.target.type === "checkbox") {
+      setFormFacturas((prev) => ({
+        ...prev,
+        [e.target.name]: e.target.checked,
+      }));
+    } else {
+      setFormFacturas((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+
+      if (e.target.name === "idPedido") {
+        const result = pedidosObra.filter(
+          (pedido) => pedido.id_pedido == e.target.value
+        );
+        setFormFacturas((prev) => ({ ...prev, importe: result[0].importe }));
+      }
+    }
+  };
+
+  const handleGuardarFactura = async () => {
+    // TODO: AÑADIR VALIDACIONES DE CAMPOS
+    if (
+      !formFacturas.idPedido ||
+      !formFacturas.codigo ||
+      !formFacturas.posicion ||
+      !formFacturas.importe
+    ) {
+      return alert("Faltan campos");
+    }
+
+    try {
+      // EDICION
+      if (editIDFactura) {
+        await axios.put(
+          `http://localhost:3002/api/ecoFactura/${editIDFactura}`,
+          formFacturas
+        );
+      }
+      // ADICION
+      else {
+        await axios.post("http://localhost:3002/api/ecoFactura", formFacturas);
+      }
+      setShowModalFacturas(false);
+      fetchFacturas([idObra], "Padre");
+    } catch (error) {
+      console.error(`Error al guardar la factura- ${error}`);
+    }
+  };
+
+  //#endregion
+
+  //#region GET TIPOS DE GASTOS
 
   // Funcion para obtener los diferentes tipos de gastos y el coste total de cada tipo de gasto.
   const getTiposGastos = (gastosObra, tipoObra) => {
@@ -327,6 +588,10 @@ const DetalleObra = () => {
     }
   };
 
+  //#endregion
+
+  //#region HANDLERS PARA BUSQUEDA/SELECCION/ELIMINACION DE OBRAS RELACIONADAS
+
   // Handlers para búsqueda y selección
   const handleObraPadreBusqueda = async (e) => {
     const value = e.target.value;
@@ -345,11 +610,13 @@ const DetalleObra = () => {
   };
 
   const seleccionarObraPadre = (obra) => {
-    console.log("Seleccionando...");
+    setObraPadreSeleccionada(obra);
+    setObraPadreBusqueda("");
+    setSugerenciasPadre([]);
   };
 
   const eliminarObraPadre = () => {
-    console.log("Eliminando...");
+    setObraPadreSeleccionada(null);
   };
 
   const handleObraHijaBusqueda = async (e) => {
@@ -369,16 +636,41 @@ const DetalleObra = () => {
   };
 
   const agregarObraHija = (obra) => {
-    console.log("Agregando...");
+    if (!obrasHijasSeleccionadas.some((o) => o.id_obra === obra.id_obra)) {
+      setObrasHijasSeleccionadas([...obrasHijasSeleccionadas, obra]);
+    }
+    setObraHijaBusqueda("");
+    setSugerenciasHijas([]);
   };
 
   const eliminarObraHija = (idObra) => {
-    console.log("Eliminando");
+    setObrasHijasSeleccionadas(
+      obrasHijasSeleccionadas.filter((o) => o.id_obra !== idObra)
+    );
   };
+
+  //#endregion
+
+  //#region FUNCIONES DE CÁLCULO
 
   // Suma de los gastos
   const totalImporteGastos = gastosObra.reduce(
     (acc, gasto) => acc + gasto.cantidad * gasto.importe,
+    0
+  );
+
+  // Suma de los gastos de las obras subordinadas
+  const totalImporteGastosSub = gastosObrasHijas.reduce(
+    (acc, gasto) => acc + gasto.cantidad * gasto.importe,
+    0
+  );
+
+  // Suma de las horas
+  const totalHoras = horasObra.reduce((acc, hora) => acc + hora.num_horas, 0);
+
+  // Importe total de las horas
+  const totalImporteHoras = horasObra.reduce(
+    (acc, hora) => acc + hora.num_horas * hora.precio_hora,
     0
   );
 
@@ -394,7 +686,98 @@ const DetalleObra = () => {
     0
   );
 
+  // Suma de los importes de los pedidos de la obra
+  const totalImportePedidos = pedidosObra.reduce(
+    (acc, pedido) => acc + pedido.importe,
+    0
+  );
+
+  // Suma de los importes de las facturas de la obra
+  const totalImporteFacturas = facturasObra.reduce(
+    (acc, factura) => acc + factura.importe,
+    0
+  );
+
+  // Suma de las horas de las obras subordinadas
+  const totalHorasSub = horasObrasHijas.reduce(
+    (acc, hora) => acc + hora.num_horas,
+    0
+  );
+
+  // Suma del importe de las horas de las obras subordinadas
+  const totalImporteHorasSub = horasObrasHijas.reduce(
+    (acc, hora) => acc + hora.num_horas * hora.precio_hora,
+    0
+  );
+
+  // Suma de las horas extra de las obras subordinadas
+  const totalHorasExtraSub = horasExtraObrasHijas.reduce(
+    (acc, hora) => acc + hora.cantidad,
+    0
+  );
+
+  // Suma de importe de las horas extra de las obras subordinadas
+  const totalImporteHorasExtraSub = horasExtraObrasHijas.reduce(
+    (acc, hora) => acc + hora.importe * hora.cantidad,
+    0
+  );
+
+  // Suma de las horas previstas de las obras subordinadas
+  const totalHorasPrevistasSub = obrasHijasSeleccionadas.reduce(
+    (acc, obra) => acc + obra.horas_previstas,
+    0
+  );
+
+  // Suma de los importes de las obras subordinadas
+  const totalImporteObrasSub = obrasHijasSeleccionadas.reduce(
+    (acc, obra) => acc + obra.importe,
+    0
+  );
+
+  // Suma de los gastos previstos de las obras subordinadas
+  const totalGastosPrevistosSub = obrasHijasSeleccionadas.reduce(
+    (acc, obra) => acc + obra.gasto_previsto,
+    0
+  );
+
+  // Suma de los importes de las facturas de las obras subordinadas
+  const totalImporteFacturasSub = facturasObrasHijas.reduce(
+    (acc, factura) => acc + factura.importe,
+    0
+  );
+
+  // Suma de los importes de los pedidos de los pedidos de las obras subordinadas
+  const totalImportePedidosSub = pedidosObrasHija.reduce(
+    (acc, pedido) => acc + pedido.importe,
+    0
+  );
+
+  // Gasto total
+  const gastoTotal = rentabilidadObra
+    ? totalImporteHoras +
+      totalImporteGastos +
+      totalImporteHorasExtra +
+      rentabilidadObra.gastos_almacen +
+      rentabilidadObra.gastos_compras
+    : totalImporteHoras + totalImporteGastos + totalImporteHorasExtra;
+
+  // Gasto total subordinadas (Sin incluir todavía gasto de almacen y compras)
+  const gastoTotalSub =
+    totalImporteHorasSub + totalImporteGastosSub + totalImporteHorasExtraSub;
+
+  //#endregion
+
+  //#region GUARDAR CAMBIOS
+  const handleGuardarCambios = () => {
+    console.log("Guardando cambios...");
+    setEditarObra(false);
+  };
+
+  //#endregion
+
   // -------------------------------------------------------------------------------------- \\
+
+  //#region JSX
 
   return (
     <Container className="mt-4">
@@ -410,7 +793,7 @@ const DetalleObra = () => {
             <Form.Control
               type="text"
               value={filteredObra.codigo_obra || ""}
-              readOnly
+              disabled={!editarObra}
             />
           </Form.Group>
 
@@ -421,7 +804,7 @@ const DetalleObra = () => {
             <Form.Control
               as="textarea"
               value={filteredObra.descripcion_obra || ""}
-              readOnly
+              disabled={!editarObra}
             />
           </Form.Group>
 
@@ -429,7 +812,7 @@ const DetalleObra = () => {
             type="checkbox"
             label="En Seguimiento"
             checked={enSeguimiento}
-            readOnly
+            disabled={!editarObra}
             className="mt-3"
           />
 
@@ -450,7 +833,7 @@ const DetalleObra = () => {
                             .slice(0, 10)
                         : ""
                     }
-                    readOnly
+                    disabled={!editarObra}
                   />
                 </Col>
               </Form.Group>
@@ -464,7 +847,7 @@ const DetalleObra = () => {
                     type="text"
                     name="descripcionSeg"
                     value={filteredObra.descripcion_seg || "Sin descripción"}
-                    readOnly
+                    disabled={!editarObra}
                   />
                 </Col>
               </Form.Group>
@@ -486,6 +869,7 @@ const DetalleObra = () => {
                   value={obraPadreBusqueda}
                   onChange={handleObraPadreBusqueda}
                   autoComplete="off"
+                  disabled={!editarObra}
                 />
                 {/* Sugerencias obra padre */}
                 {sugerenciasPadre.length > 0 && (
@@ -534,6 +918,7 @@ const DetalleObra = () => {
                   value={obraHijaBusqueda}
                   onChange={handleObraHijaBusqueda}
                   autoComplete="off"
+                  disabled={!editarObra}
                 />
                 {/* Sugerencias obras hijas */}
                 {sugerenciasHijas.length > 0 && (
@@ -582,11 +967,19 @@ const DetalleObra = () => {
 
         {/* Botones */}
         <div className="d-flex mt-3">
-          <Button variant="primary" className="w-auto px-3 me-2" disabled>
-            Editar Obra
+          <Button
+            variant="primary"
+            className="w-auto px-3 me-2"
+            onClick={
+              editarObra
+                ? () => handleGuardarCambios()
+                : () => setEditarObra(true)
+            }
+          >
+            {editarObra ? "Guardar cambios" : "Editar obra"}
           </Button>
           <Button variant="danger" className="w-auto px-3">
-            Baja Obra
+            {editarObra ? "Cancelar cambios" : "Baja Obra"}
           </Button>
         </div>
       </Card>
@@ -604,8 +997,8 @@ const DetalleObra = () => {
                 <Form.Control
                   as="select"
                   name="tipoObra"
-                  value={filteredObra.tipo_obra || ""}
-                  readOnly
+                  value={tipoObra.id || ""}
+                  disabled={!editarObra}
                 >
                   {allTiposObra.length > 0 ? (
                     allTiposObra.map((tipo) => (
@@ -628,7 +1021,7 @@ const DetalleObra = () => {
                   as="select"
                   name="tipoFacturable"
                   value={filteredObra.facturable || ""}
-                  readOnly
+                  disabled={!editarObra}
                 >
                   {allTiposFacturables.length > 0 ? (
                     allTiposFacturables.map((tipo) => (
@@ -652,7 +1045,7 @@ const DetalleObra = () => {
                   as="select"
                   name="estadoObra"
                   value={filteredObra.estado_obra || ""}
-                  readOnly
+                  disabled={!editarObra}
                 >
                   {allEstadosObra.length > 0 ? (
                     allEstadosObra.map((estado) => (
@@ -685,7 +1078,7 @@ const DetalleObra = () => {
                           .slice(0, 10)
                       : ""
                   }
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -699,7 +1092,7 @@ const DetalleObra = () => {
                   as="select"
                   name="usuarioAlta"
                   value={filteredObra.codigo_usuario_alta || ""}
-                  readOnly
+                  disabled={!editarObra}
                 >
                   {allUsuarios.length > 0 ? (
                     allUsuarios.map((usuario) => (
@@ -734,7 +1127,7 @@ const DetalleObra = () => {
                           .slice(0, 10)
                       : ""
                   }
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -759,7 +1152,7 @@ const DetalleObra = () => {
                           .slice(0, 10)
                       : ""
                   }
-                  readOnly
+                  disabled={!editarObra}
                 />
               )}
             </div>
@@ -773,7 +1166,7 @@ const DetalleObra = () => {
                   type="number"
                   name="horasPrevistas"
                   value={filteredObra.horas_previstas || 0}
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -787,7 +1180,7 @@ const DetalleObra = () => {
                   type="number"
                   name="gastoPrevisto"
                   value={filteredObra.gasto_previsto || 0}
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -801,7 +1194,7 @@ const DetalleObra = () => {
                   type="number"
                   name="importe"
                   value={filteredObra.importe || 0}
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -815,7 +1208,7 @@ const DetalleObra = () => {
                   type="number"
                   name="viabilidad"
                   value={filteredObra.viabilidad || 0}
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -829,7 +1222,7 @@ const DetalleObra = () => {
                   as="select"
                   name="empresa"
                   value={filteredObra.id_empresa || ""}
-                  readOnly
+                  disabled={!editarObra}
                 >
                   {allEmpresas.length > 0 ? (
                     allEmpresas.map((empresa) => (
@@ -856,7 +1249,7 @@ const DetalleObra = () => {
                   as="select"
                   name="contacto"
                   value={filteredObra.id_contacto || ""}
-                  readOnly
+                  disabled={!editarObra}
                 >
                   {allContactosEmpresa.length > 0 ? (
                     allContactosEmpresa.map((contacto) => (
@@ -868,7 +1261,7 @@ const DetalleObra = () => {
                       </option>
                     ))
                   ) : (
-                    <option>Cargando empresas...</option>
+                    <option>Cargando contactos...</option>
                   )}
                 </Form.Control>
               </Col>
@@ -883,7 +1276,7 @@ const DetalleObra = () => {
                   as="select"
                   name="edificio"
                   value={filteredObra.id_edificio || ""}
-                  readOnly
+                  disabled={!editarObra}
                 >
                   {allEdificios.length > 0 ? (
                     allEdificios.map((edificio) => (
@@ -910,7 +1303,7 @@ const DetalleObra = () => {
                   type="text"
                   name="observaciones"
                   value={filteredObra.observaciones || "Sin observaciones"}
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -926,7 +1319,7 @@ const DetalleObra = () => {
                   value={
                     filteredObra.observaciones_internas || "Sin observaciones"
                   }
-                  readOnly
+                  disabled={!editarObra}
                 />
               </Col>
             </Form.Group>
@@ -955,7 +1348,7 @@ const DetalleObra = () => {
                 {pedidosObra.length > 0 ? (
                   pedidosObra.map((pedido, index) => (
                     <tr key={index}>
-                      <td>{pedido.codigo_pedido}</td>
+                      <td>{`${pedido.codigo_pedido} - ${pedido.posicion}`}</td>
                       <td>
                         {new Date(pedido.fecha).toLocaleDateString("es-Es")}
                       </td>
@@ -969,12 +1362,22 @@ const DetalleObra = () => {
                       </td>{" "}
                       <td>
                         <p>
-                          <Button variant="info" size="sm" className="me-2">
+                          <Button
+                            variant="info"
+                            size="sm"
+                            onClick={() => handleEditarPedido(pedido)}
+                            className="me-2"
+                          >
                             Detalle
                           </Button>
                         </p>
                         <p>
-                          <Button variant="danger" size="sm">
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => handleDeletePedido(pedido.id_pedido)}
+                            disabled={!editarObra}
+                          >
                             Eliminar
                           </Button>
                         </p>
@@ -989,19 +1392,28 @@ const DetalleObra = () => {
               </tbody>
             </table>
 
+            <p>
+              <Button
+                variant="info"
+                size="sm"
+                onClick={() => handleAgregarPedido()}
+                className="me-2"
+                disabled={!editarObra}
+              >
+                Nuevo Pedido
+              </Button>
+            </p>
+
             <div className="mt-3">
               <strong>Totales</strong>
-              <p>
-                Total Importe Pedidos:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.sumPedido
-                  : "No hay datos de rentabilidad"}
-              </p>
+              <p>Total Importe Pedidos: {totalImportePedidos.toFixed(2)}</p>
               <p>
                 % Pedido de la Obra:{" "}
                 {rentabilidadObra
-                  ? (rentabilidadObra.sumPedido / rentabilidadObra.importe) *
-                    100
+                  ? (
+                      (totalImportePedidos / rentabilidadObra.importe) *
+                      100
+                    ).toFixed(2)
                   : "No hay datos de rentabilidad"}
               </p>{" "}
               {/* Muestra el porcentaje de la obra */}
@@ -1024,7 +1436,7 @@ const DetalleObra = () => {
                 {facturasObra.length > 0 ? (
                   facturasObra.map((factura, index) => (
                     <tr key={index}>
-                      <td>{factura.codigo_pedido}</td>
+                      <td>{`${factura.codigo_pedido} - ${factura.posicion_pedido}`}</td>
                       <td>{factura.codigo_factura}</td>
                       <td>
                         {new Date(factura.fecha).toLocaleDateString("es-Es")}
@@ -1037,12 +1449,24 @@ const DetalleObra = () => {
                       <td>{factura.importe}</td>
                       <td>
                         <p>
-                          <Button variant="info" size="sm" className="me-2">
+                          <Button
+                            variant="info"
+                            onClick={() => handleEditarFactura(factura)}
+                            size="sm"
+                            className="me-2"
+                          >
                             Detalle
                           </Button>
                         </p>
                         <p>
-                          <Button variant="danger" size="sm">
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() =>
+                              handleDeleteFactura(factura.id_factura)
+                            }
+                            disabled={!editarObra}
+                          >
                             Eliminar
                           </Button>
                         </p>
@@ -1057,19 +1481,28 @@ const DetalleObra = () => {
               </tbody>
             </table>
 
+            <p>
+              <Button
+                variant="info"
+                size="sm"
+                onClick={() => handleAgregarFactura()}
+                className="me-2"
+                disabled={!editarObra}
+              >
+                Nueva Factura
+              </Button>
+            </p>
+
             <div className="mt-3">
               <strong>Totales</strong>
-              <p>
-                Total Importe Facturas:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.sumFactura
-                  : "No hay datos de rentabilidad"}
-              </p>
+              <p>Total Importe Facturas: {totalImporteFacturas.toFixed(2)}</p>
               <p>
                 % Facturado de la Obra:{" "}
                 {rentabilidadObra
-                  ? (rentabilidadObra.sumFactura / rentabilidadObra.importe) *
-                    100
+                  ? (
+                      (totalImporteFacturas / rentabilidadObra.importe) *
+                      100
+                    ).toFixed(2)
                   : "No hay datos de rentabilidad"}
               </p>{" "}
               {/* Muestra el porcentaje de la obra */}
@@ -1167,15 +1600,13 @@ const DetalleObra = () => {
               <strong>Totales Horas</strong>
               <p>
                 Total Horas Imputadas:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.horasReal
-                  : "No hay datos de rentabilidad"}
+                {totalHoras ? Math.round(totalHoras * 100) / 100 : 0}
               </p>
               <p>
                 Total Importe Horas:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gastoPersonal
-                  : "No hay datos de rentabilidad"}
+                {totalImporteHoras
+                  ? Math.round(totalImporteHoras * 100) / 100
+                  : 0}
               </p>
             </div>
 
@@ -1374,6 +1805,65 @@ const DetalleObra = () => {
             {/* Gastos de Almacen*/}
             <h5 className="mt-4">Gastos Generales</h5>
 
+            {/* LISTADO DE GASTOS DE ALMACEN */}
+            {mostrarGastos && (
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>CodRef.</th>
+                    <th>Descripción</th>
+                    <th>Fecha</th>
+                    <th>Usu</th>
+                    <th>Tipo</th>
+                    <th>Concepto</th>
+                    <th>Factura</th>
+                    <th>Cant.</th>
+                    <th>i.u.</th>
+                    <th>Total</th>
+                    <th>Accion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {movimientosAlmacenObra.length > 0 ? (
+                    movimientosAlmacenObra.map((gasto, idx) => (
+                      <tr key={idx}>
+                        <td>{gasto.codigo_referencia}</td>
+                        <td>{gasto.descripcion_referencia}</td>
+                        <td>
+                          {new Date(gasto.fecha_alta).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{gasto.codigo_firma}</td>
+                        <td>{gasto.tipo_movimiento}</td>
+                        <td>{gasto.concepto_movimiento}</td>
+                        <td>{gasto.numero_factura ?? "-"}</td>
+                        <td>{gasto.cantidad}</td>
+                        <td>{gasto.importe}</td>
+                        <td>{(gasto.importe * gasto.cantidad).toFixed(2)}</td>
+                        <td>
+                          <p>
+                            <Button variant="info" size="sm" className="me-2">
+                              Detalle
+                            </Button>
+                          </p>
+                          <p>
+                            <Button variant="danger" size="sm" className="me-2">
+                              Eliminar
+                            </Button>
+                          </p>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4">No hay gastos de almacén asociados</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+
             <div className="mt-3">
               <strong>Totales Almacen</strong>
               <p>
@@ -1387,6 +1877,55 @@ const DetalleObra = () => {
             {/* Gastos de Compras */}
             <h5 className="mt-4">Gastos de Compras</h5>
 
+            {/* LISTADO DE LAS FACTURAS DE LAS COMPRAS */}
+            {mostrarGastos && (
+              <table className="table table-bordered">
+                <thead>
+                  <tr>
+                    <th>Factura</th>
+                    <th>Fecha</th>
+                    <th>Usu</th>
+                    <th>Importe</th>
+                    <th>Obs</th>
+                    <th>Accion</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {facturasComprasObra.length > 0 ? (
+                    facturasComprasObra.map((gasto, idx) => (
+                      <tr key={idx}>
+                        <td>{`${gasto.Numero} - ${gasto.Concepto}`}</td>
+                        <td>
+                          {new Date(gasto.fecha_alta).toLocaleDateString(
+                            "es-ES"
+                          )}
+                        </td>
+                        <td>{gasto.codigo_firma}</td>
+                        <td>{gasto.importe}</td>
+                        <td>{gasto.observaciones}</td>
+                        <td>
+                          <p>
+                            <Button variant="info" size="sm" className="me-2">
+                              Detalle
+                            </Button>
+                          </p>
+                          <p>
+                            <Button variant="danger" size="sm" className="me-2">
+                              Eliminar
+                            </Button>
+                          </p>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan="4">No hay facturas de compras asociadas</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            )}
+
             <div className="mt-3">
               <strong>Totales Compras</strong>
               <p>
@@ -1398,424 +1937,795 @@ const DetalleObra = () => {
               <p>
                 <strong>Total Horas/Gastos</strong>
               </p>
-              <p>Total Gastos/Horas de la Obra: Sin incluir</p>
+              <p>
+                Total Gastos/Horas de la Obra:{" "}
+                {(
+                  rentabilidadObra.gastoPersonal +
+                  totalImporteHorasExtra +
+                  totalImporteGastos
+                ).toFixed(2)}
+              </p>
             </div>
           </Accordion.Body>
         </Accordion.Item>
       </Accordion>
 
-      <Accordion defaultActiveKey="3">
-        <Accordion.Item eventKey="3">
-          <Accordion.Header>Horas y Gastos Obras Subordinadas</Accordion.Header>
-          <Accordion.Body>
-            {/* Horas imputadas a la Obra */}
-            <h5>Horas Imputadas a la Obra</h5>
-            <Form.Check
-              type="checkbox"
-              label="Mostrar listado de horas de las Obras Subordinadas"
-              className="mb-3"
-              checked={mostrarHorasHijas}
-              onChange={() => setMostrarHorasHijas((prev) => !prev)}
-            />
+      {obrasHijasSeleccionadas.length > 0 && (
+        <Accordion defaultActiveKey="3">
+          <Accordion.Item eventKey="3">
+            <Accordion.Header>
+              Horas y Gastos Obras Subordinadas
+            </Accordion.Header>
+            <Accordion.Body>
+              {/* Horas imputadas a la Obra */}
+              <h5>Horas Imputadas a la Obra</h5>
+              <Form.Check
+                type="checkbox"
+                label="Mostrar listado de horas de las Obras Subordinadas"
+                className="mb-3"
+                checked={mostrarHorasHijas}
+                onChange={() => setMostrarHorasHijas((prev) => !prev)}
+              />
 
-            {/* LISTADO DE HORAS SUBORDINADAS */}
-            {mostrarHorasHijas && (
-              <table className="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>Dia Trab.</th>
-                    <th>Usu</th>
-                    <th>Tarea</th>
-                    <th>Validado</th>
-                    <th>UsuV</th>
-                    <th>hrs.</th>
-                    <th>p.h.</th>
-                    <th>Total</th>
-                    <th>Accion</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {horasObrasHijas.length > 0 ? (
-                    horasObrasHijas.map((hora, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          {new Date(hora.dia_trabajado).toLocaleDateString(
-                            "es-ES"
-                          )}
-                        </td>
-                        <td>{hora.usuario}</td>
-                        <td>{hora.id_tarea}</td>
-                        <td>
-                          {new Date(hora.fecha_validacion).toLocaleDateString(
-                            "es-ES"
-                          )}
-                        </td>
-                        <td>{hora.usuario_validacion}</td>
-                        <td>{hora.num_horas}</td>
-                        <td>{hora.precio_hora}</td>
-                        <td>{hora.num_horas * hora.precio_hora}</td>
-                        <td>
-                          <Button variant="info" className="me-2">
-                            Detalle
-                          </Button>
+              {/* LISTADO DE HORAS SUBORDINADAS */}
+              {mostrarHorasHijas && (
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Dia Trab.</th>
+                      <th>Usu</th>
+                      <th>Tarea</th>
+                      <th>Validado</th>
+                      <th>UsuV</th>
+                      <th>hrs.</th>
+                      <th>p.h.</th>
+                      <th>Total</th>
+                      <th>Accion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {horasObrasHijas.length > 0 ? (
+                      horasObrasHijas.map((hora, idx) => (
+                        <tr key={idx}>
+                          <td>
+                            {new Date(hora.dia_trabajado).toLocaleDateString(
+                              "es-ES"
+                            )}
+                          </td>
+                          <td>{hora.usuario}</td>
+                          <td>{hora.id_tarea}</td>
+                          <td>
+                            {new Date(hora.fecha_validacion).toLocaleDateString(
+                              "es-ES"
+                            )}
+                          </td>
+                          <td>{hora.usuario_validacion}</td>
+                          <td>{hora.num_horas}</td>
+                          <td>{hora.precio_hora}</td>
+                          <td>{hora.num_horas * hora.precio_hora}</td>
+                          <td>
+                            <Button variant="info" className="me-2">
+                              Detalle
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4">
+                          No hay horas asociadas a las obras subordinadas
                         </td>
                       </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4">
-                        No hay horas asociadas a las obras subordinadas
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-
-            <div className="mt-3">
-              <strong>Totales Horas</strong>
-              <p>Total Importe Horas Obras Subordinadas: Por incluir</p>
-            </div>
-
-            {/* Horas Extras de las Obras Subordinadas */}
-            <h5 className="mt-4">Horas Extras de la Obra</h5>
-            {/* LISTADO DE HORAS EXTRA*/}
-            {mostrarHorasHijas && (
-              <table className="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>Dia Trab.</th>
-                    <th>Usu</th>
-                    <th>Tipo</th>
-                    <th>Validado</th>
-                    <th>UsuV</th>
-                    <th>Visa</th>
-                    <th>Pagado</th>
-                    <th>Cant.</th>
-                    <th>i.u.</th>
-                    <th>Total</th>
-                    <th>Accion</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {horasExtraObrasHijas.length > 0 ? (
-                    horasExtraObrasHijas.map((hora, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          {new Date(hora.fecha_gasto).toLocaleDateString(
-                            "es-ES"
-                          )}
-                        </td>
-                        <td>{hora.usuario}</td>
-                        <td>{hora.descripcion}</td>
-                        <td>
-                          {new Date(hora.fecha_validacion).toLocaleDateString(
-                            "es-ES"
-                          )}
-                        </td>
-                        <td>{hora.usuario_validacion}</td>
-                        <td>{hora.pagado_visa ? "[SÍ]" : "[NO]"}</td>
-                        <td>
-                          {new Date(hora.fecha_pago).toLocaleDateString(
-                            "es-ES"
-                          )}
-                        </td>
-                        <td>{hora.cantidad}</td>
-                        <td>{hora.importe}</td>
-                        <td>{hora.cantidad * hora.importe}</td>
-                        <td>
-                          <Button variant="info" className="me-2">
-                            Detalle
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4">
-                        No hay horas extras asociadas a las obras subordinadas
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-            <div className="mt-3">
-              <strong>Totales Horas Extras</strong>
-              <p>Total Cantidad Horas Extra: 10</p>
-              <p>Total Importe Horas Extra: 500€</p>
-            </div>
-
-            {/* Gastos de las Obras Subordinadas*/}
-            <h5 className="mt-4">Gastos de las Obras Subordinadas</h5>
-            <Form.Check
-              type="checkbox"
-              label="Mostrar listado de gastos de las Obras Subordinadas"
-              className="mb-3"
-              checked={mostrarGastosHijas}
-              onChange={() => setMostrarGastosHijas((prev) => !prev)}
-            />
-
-            {/* LISTADO DE GASTOS DE OBRAS SUBORDINADAS*/}
-            {mostrarGastosHijas && (
-              <table className="table table-bordered">
-                <thead>
-                  <tr>
-                    <th>F. Gasto</th>
-                    <th>Usu</th>
-                    <th>Tipo</th>
-                    <th>Validado</th>
-                    <th>UsuV</th>
-                    <th>Visa</th>
-                    <th>Pagado</th>
-                    <th>Cant.</th>
-                    <th>Importe Uni.</th>
-                    <th>Total</th>
-                    <th>Accion</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {gastosObrasHijas.length > 0 ? (
-                    gastosObrasHijas.map((gasto, idx) => (
-                      <tr key={idx}>
-                        <td>
-                          {new Date(gasto.fecha_gasto).toLocaleDateString(
-                            "es-ES"
-                          )}
-                        </td>
-                        <td>{gasto.usuario_alta}</td>
-                        <td>{gasto.tipo_gasto}</td>
-                        <td>
-                          {new Date(gasto.fecha_validacion).toLocaleDateString(
-                            "es-ES"
-                          )}
-                        </td>
-                        <td>{gasto.usuario_validacion}</td>
-                        <td>{gasto.pagado_visa ? "[SÍ]" : "[NO]"}</td>
-                        <td>
-                          {new Date(gasto.fecha_pago).toLocaleDateString(
-                            "es-Es"
-                          )}
-                        </td>
-                        <td>{gasto.cantidad}</td>
-                        <td>{gasto.importe}</td>
-                        <td>{gasto.importe * gasto.cantidad}</td>
-                        <td>
-                          <Button variant="info" className="me-2">
-                            Detalle
-                          </Button>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan="4">
-                        No hay gastos asociados a las obras subordinadas
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            )}
-
-            <div className="mt-3">
-              <strong>Totales Gastos Generales</strong>
-              {tiposGastosHijas.length > 0 ? (
-                tiposGastosHijas.map((gasto, idx) => (
-                  <p key={idx}>{`${gasto.tipo}: ${gasto.importe}`}</p>
-                ))
-              ) : (
-                <p>No hay gastos asociados</p>
+                    )}
+                  </tbody>
+                </table>
               )}
-              <p>
-                <strong>Total Importe Gastos:</strong>
-                {"Por incluir"}
-              </p>
-            </div>
 
-            {/* Gastos de Almacen*/}
-            <h5 className="mt-4">Gastos de Almacen</h5>
-            <div className="mt-3">
-              <strong>Totales Almacen</strong>
-              <p>Total Importe Almacen: Sin incluir</p>
-            </div>
+              <div className="mt-3">
+                <strong>Totales Horas</strong>
+                <p>
+                  Total Cantidad Horas Obras Subordinadas:{" "}
+                  {totalHorasSub.toFixed(2)}
+                </p>
+                <p>
+                  Total Importe Horas Obras Subordinadas:{" "}
+                  {totalImporteHorasSub.toFixed(2)}
+                </p>
+              </div>
 
-            {/* Gastos de Compras */}
-            <h5 className="mt-4">Gastos de Compras</h5>
+              {/* Horas Extras de las Obras Subordinadas */}
+              <h5 className="mt-4">Horas Extras de la Obra</h5>
+              {/* LISTADO DE HORAS EXTRA*/}
+              {mostrarHorasHijas && (
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>Dia Trab.</th>
+                      <th>Usu</th>
+                      <th>Tipo</th>
+                      <th>Validado</th>
+                      <th>UsuV</th>
+                      <th>Visa</th>
+                      <th>Pagado</th>
+                      <th>Cant.</th>
+                      <th>i.u.</th>
+                      <th>Total</th>
+                      <th>Accion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {horasExtraObrasHijas.length > 0 ? (
+                      horasExtraObrasHijas.map((hora, idx) => (
+                        <tr key={idx}>
+                          <td>
+                            {new Date(hora.fecha_gasto).toLocaleDateString(
+                              "es-ES"
+                            )}
+                          </td>
+                          <td>{hora.usuario}</td>
+                          <td>{hora.descripcion}</td>
+                          <td>
+                            {new Date(hora.fecha_validacion).toLocaleDateString(
+                              "es-ES"
+                            )}
+                          </td>
+                          <td>{hora.usuario_validacion}</td>
+                          <td>{hora.pagado_visa ? "[SÍ]" : "[NO]"}</td>
+                          <td>
+                            {new Date(hora.fecha_pago).toLocaleDateString(
+                              "es-ES"
+                            )}
+                          </td>
+                          <td>{hora.cantidad}</td>
+                          <td>{hora.importe}</td>
+                          <td>{hora.cantidad * hora.importe}</td>
+                          <td>
+                            <Button variant="info" className="me-2">
+                              Detalle
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4">
+                          No hay horas extras asociadas a las obras subordinadas
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+              <div className="mt-3">
+                <strong>Totales Horas Extras</strong>
+                <p>
+                  Total Cantidad Horas Extra Obras Subordinadas:{" "}
+                  {totalHorasExtraSub.toFixed(2)}
+                </p>
+                <p>
+                  Total Importe Horas Extra Obras Subordinadas:{" "}
+                  {totalImporteHorasExtraSub.toFixed(2)}
+                </p>
+              </div>
 
-            <div className="mt-3">
-              <strong>Totales Compras</strong>
-              <p>Total Importe Compras: Sin incluir</p>
-              <p>
-                <strong>Total Horas/Gastos</strong>
-              </p>
-              <p>Total Gastos/Horas de la Obra: Sin incluir</p>
-            </div>
-          </Accordion.Body>
-        </Accordion.Item>
-      </Accordion>
+              {/* Gastos de las Obras Subordinadas*/}
+              <h5 className="mt-4">Gastos de las Obras Subordinadas</h5>
+              <Form.Check
+                type="checkbox"
+                label="Mostrar listado de gastos de las Obras Subordinadas"
+                className="mb-3"
+                checked={mostrarGastosHijas}
+                onChange={() => setMostrarGastosHijas((prev) => !prev)}
+              />
+
+              {/* LISTADO DE GASTOS DE OBRAS SUBORDINADAS*/}
+              {mostrarGastosHijas && (
+                <table className="table table-bordered">
+                  <thead>
+                    <tr>
+                      <th>F. Gasto</th>
+                      <th>Usu</th>
+                      <th>Tipo</th>
+                      <th>Validado</th>
+                      <th>UsuV</th>
+                      <th>Visa</th>
+                      <th>Pagado</th>
+                      <th>Cant.</th>
+                      <th>Importe Uni.</th>
+                      <th>Total</th>
+                      <th>Accion</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gastosObrasHijas.length > 0 ? (
+                      gastosObrasHijas.map((gasto, idx) => (
+                        <tr key={idx}>
+                          <td>
+                            {new Date(gasto.fecha_gasto).toLocaleDateString(
+                              "es-ES"
+                            )}
+                          </td>
+                          <td>{gasto.usuario_alta}</td>
+                          <td>{gasto.tipo_gasto}</td>
+                          <td>
+                            {new Date(
+                              gasto.fecha_validacion
+                            ).toLocaleDateString("es-ES")}
+                          </td>
+                          <td>{gasto.usuario_validacion}</td>
+                          <td>{gasto.pagado_visa ? "[SÍ]" : "[NO]"}</td>
+                          <td>
+                            {new Date(gasto.fecha_pago).toLocaleDateString(
+                              "es-Es"
+                            )}
+                          </td>
+                          <td>{gasto.cantidad}</td>
+                          <td>{gasto.importe}</td>
+                          <td>{gasto.importe * gasto.cantidad}</td>
+                          <td>
+                            <Button variant="info" className="me-2">
+                              Detalle
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan="4">
+                          No hay gastos asociados a las obras subordinadas
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              )}
+
+              <div className="mt-3">
+                <strong>Totales Gastos Generales</strong>
+                {tiposGastosHijas.length > 0 ? (
+                  tiposGastosHijas.map((gasto, idx) => (
+                    <p key={idx}>{`${gasto.tipo}: ${gasto.importe}`}</p>
+                  ))
+                ) : (
+                  <p>No hay gastos asociados</p>
+                )}
+                <p>
+                  <strong>Total Importe Gastos:</strong>
+                  {totalImporteGastosSub.toFixed(2)}
+                </p>
+              </div>
+
+              {/* Gastos de Almacen*/}
+              <h5 className="mt-4">Gastos de Almacen</h5>
+              <div className="mt-3">
+                <strong>Totales Almacen</strong>
+                <p>Total Importe Almacen: Sin incluir</p>
+              </div>
+
+              {/* Gastos de Compras */}
+              <h5 className="mt-4">Gastos de Compras</h5>
+
+              <div className="mt-3">
+                <strong>Totales Compras</strong>
+                <p>Total Importe Compras: Sin incluir</p>
+                <p>
+                  <strong>Total Horas/Gastos</strong>
+                </p>
+                <p>Total Gastos/Horas de la Obra: Sin incluir</p>
+              </div>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+      )}
 
       <Accordion defaultActiveKey="4">
         <Accordion.Item eventKey="4">
-          <Accordion.Header>Resumen</Accordion.Header>
+          <Accordion.Header>Resumen Obra</Accordion.Header>
           <Accordion.Body>
             <div className="mt-3">
-              <h5>Resumen Obra:</h5>
-              <p>
-                <strong>H.Previstas</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.horas_previstas
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>H. Reales</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.horasReal
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Gasto Personal (GP)</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gastoPersonal
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>H. Totales</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.horasTotal
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>G.Personal Total (GP + GHE)</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gastoPersonalTotal ?? "Sin especificar"
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>H.Extra</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.horasExtra
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Gasto H.Extra (GHE)</strong>:
-                {rentabilidadObra
-                  ? rentabilidadObra.gastoPersonalExtra ?? "Sin especificar"
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Gasto Prev</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gasto_previsto
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>G.Real (GR)</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gastoReal
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>G.Almacen (GA)</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gastos_almacen ?? 0
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>G.Compras (GC)</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gastos_compras ?? 0
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Importe</strong>:
-                {rentabilidadObra
-                  ? rentabilidadObra.importe
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Sum P</strong>:
-                {rentabilidadObra
-                  ? rentabilidadObra.sumPedido
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Sum F</strong>:
-                {rentabilidadObra
-                  ? rentabilidadObra.sumFactura
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Pte P</strong>:
-                {rentabilidadObra
-                  ? rentabilidadObra.ptePedido
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Pte F</strong>:
-                {rentabilidadObra
-                  ? rentabilidadObra.pteFactura
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>G.Total (GP + GR + GHE + GA + GC)</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.gastoPersonal +
-                    rentabilidadObra.gastoReal +
-                    rentabilidadObra.gastoPersonalExtra
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>Rentabilidad</strong>:{" "}
-                {rentabilidadObra
-                  ? rentabilidadObra.rentabilidad
-                  : "No hay datos de rentabilidad"}
-              </p>
-              <p>
-                <strong>%Rent</strong>:
-                {rentabilidadObra
-                  ? rentabilidadObra.rentabilidadPorcentaje
-                  : "No hay datos de rentabilidad"}
-              </p>
-            </div>
-
-            <div className="mt-3">
-              <h5>Resumen Obras Subordinadas</h5>
-              <p>H.Previstas:</p>
-              <p>H.Reales:</p>
-              <p>G.Personal:</p>
-              <p>H.Totales:</p>
-              <p>H.Extra:</p>
-              <p>Gasto H.Extra:</p>
-              <p>Gasto Prev:</p>
-              <p>G.Real:</p>
-              <p>G.Almacen:</p>
-              <p>G.Compras:</p>
-              <p>Importe:</p>
-              <p>Sum P:</p>
-              <p>Sum F:</p>
-              <p>Pte P:</p>
-              <p>G.Total:</p>
-              <p>Rentabilidad</p>
-              <p>%Rent:</p>
-            </div>
-
-            <div className="mt-3">
-              <h5>Resumen Obras + Subordinadas: </h5>
-              <p>Importe: </p>
-              <p>G.Total: </p>
-              <p>Rentabilidad: </p>
-              <p>%Rent: </p>
+              <div
+                style={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(auto-fit, minmax(250px, 1fr))",
+                  gap: "1rem",
+                  marginTop: "1rem",
+                }}
+              >
+                <p>
+                  <strong>H.Previstas</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.horas_previstas
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>H. Reales</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.horasReal
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Gasto Personal (GP)</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.gastoPersonal
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>H. Totales</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.horasTotal
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>G.Personal Total (GP + GHE)</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.gastoPersonal + totalImporteHorasExtra
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>H.Extra</strong>:{" "}
+                  {totalHorasExtra
+                    ? totalHorasExtra
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Gasto H.Extra (GHE)</strong>:
+                  {totalImporteHorasExtra
+                    ? totalImporteHorasExtra
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Gasto Prev</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.gasto_previsto
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>G.Real (GR)</strong>: {totalImporteGastos ?? 0}
+                </p>
+                <p>
+                  <strong>G.Almacen (GA)</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.gastos_almacen ?? 0
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>G.Compras (GC)</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.gastos_compras ?? 0
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Importe</strong>:
+                  {rentabilidadObra
+                    ? rentabilidadObra.importe
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Sum P</strong>:
+                  {rentabilidadObra
+                    ? rentabilidadObra.sumPedido
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Sum F</strong>:
+                  {rentabilidadObra
+                    ? rentabilidadObra.sumFactura
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Pte P</strong>:
+                  {rentabilidadObra
+                    ? rentabilidadObra.importe - rentabilidadObra.sumPedido
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>Pte F</strong>:
+                  {rentabilidadObra
+                    ? rentabilidadObra.importe - rentabilidadObra.sumFactura
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>G.Total (GP + GR + GHE + GA + GC)</strong>:{" "}
+                  {gastoTotal}
+                </p>
+                <p>
+                  <strong>Rentabilidad</strong>:{" "}
+                  {rentabilidadObra
+                    ? rentabilidadObra.rentabilidad
+                    : "No hay datos de rentabilidad"}
+                </p>
+                <p>
+                  <strong>%Rent</strong>:
+                  {rentabilidadObra
+                    ? rentabilidadObra.rentabilidadPorcentaje
+                    : "No hay datos de rentabilidad"}
+                </p>
+              </div>
             </div>
           </Accordion.Body>
         </Accordion.Item>
       </Accordion>
+
+      {obrasHijasSeleccionadas.length > 0 && (
+        <Accordion defaultActiveKey="5">
+          <Accordion.Item eventKey="5">
+            <Accordion.Header>Resumen Obras Subordinadas</Accordion.Header>
+            <Accordion.Body>
+              <div className="mt-3">
+                <div className="mt-3">
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(250px, 1fr))",
+                      gap: "1rem",
+                      marginTop: "1rem",
+                    }}
+                  >
+                    <p>
+                      <strong>H.Previstas:</strong>
+                      {totalHorasPrevistasSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>H.Reales:</strong>
+                      {totalHorasSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>G.Personal:</strong>
+                      {totalImporteHorasSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>H.Totales:</strong>
+                      {(totalHorasSub + totalHorasExtraSub).toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>G.Personal Total (GP + GHE)</strong>:{" "}
+                      {(
+                        totalImporteHorasSub + totalImporteHorasExtraSub
+                      ).toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>H.Extra:</strong>
+                      {totalHorasExtraSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Gasto H.Extra:</strong>
+                      {totalImporteHorasExtraSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Gasto Prev:</strong>
+                      {totalGastosPrevistosSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>G.Real:</strong>
+                      {totalImporteGastosSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>G.Almacen: Sin incluir</strong>
+                    </p>
+                    <p>
+                      <strong>G.Compras: Sin incluir</strong>
+                    </p>
+                    <p>
+                      <strong>Importe:</strong>
+                      {totalImporteObrasSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Sum P:</strong>
+                      {totalImportePedidosSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Sum F:</strong>
+                      {totalImporteFacturasSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Pte P:</strong>
+                      {(totalImporteObrasSub - totalImportePedidosSub).toFixed(
+                        2
+                      )}
+                    </p>
+                    <p>
+                      <strong>Pte F:</strong>
+                      {(totalImporteObrasSub - totalImporteFacturasSub).toFixed(
+                        2
+                      )}
+                    </p>
+                    <p>
+                      <strong>G.Total (GP + GR + GHE + GA + GC):</strong>
+                      {gastoTotalSub.toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Rentabilidad</strong>
+                      {(totalImporteObrasSub - gastoTotalSub).toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>%Rent:</strong>
+                      {totalImporteObrasSub !== 0
+                        ? (
+                            ((totalImporteObrasSub - gastoTotalSub) * 100) /
+                            totalImporteObrasSub
+                          ).toFixed(2)
+                        : 0}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+      )}
+
+      {obrasHijasSeleccionadas.length > 0 && (
+        <Accordion defaultActiveKey="6">
+          <Accordion.Item eventKey="6">
+            <Accordion.Header>Resumen Obras + Subordinadas</Accordion.Header>
+            <Accordion.Body>
+              <div className="mt-3">
+                <div className="mt-3">
+                  <div
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns:
+                        "repeat(auto-fit, minmax(250px, 1fr))",
+                      gap: "1rem",
+                      marginTop: "1rem",
+                    }}
+                  >
+                    <p>
+                      <strong>Importe: </strong>
+                      {rentabilidadObra
+                        ? rentabilidadObra.importe + totalImporteObrasSub
+                        : totalImporteObrasSub}
+                    </p>
+                    <p>
+                      <strong>G.Total:</strong>{" "}
+                      {(gastoTotal + gastoTotalSub).toFixed(2)}
+                    </p>
+                    <p>
+                      <strong>Rentabilidad: </strong>
+                      {rentabilidadObra
+                        ? totalImporteObrasSub -
+                          gastoTotalSub +
+                          rentabilidadObra.rentabilidad
+                        : "Faltan datos para el cálculo"}
+                    </p>
+                    <p>
+                      <strong>%Rent:</strong>{" "}
+                      {rentabilidadObra
+                        ? (
+                            ((totalImporteObrasSub -
+                              gastoTotalSub +
+                              rentabilidadObra.rentabilidad) *
+                              100) /
+                            rentabilidadObra.importe
+                          ).toFixed(2)
+                        : "Faltan datos para el cálculo"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </Accordion.Body>
+          </Accordion.Item>
+        </Accordion>
+      )}
 
       <Button className="mt-4" onClick={() => navigate(-1)}>
         Volver
       </Button>
+      {/* MODAL DE ADICION/EDICION DE PEDIDOS*/}
+      <Modal show={showModalPedidos} onHide={() => setShowModalPedidos(false)}>
+        {" "}
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {editIDPedido ? "Detalle pedido" : "Nuevo Pedido"}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-2">
+              <Form.Label>Fecha</Form.Label>
+              <Form.Control
+                type="date"
+                name="fechaPedido"
+                value={
+                  formPedidos.fechaPedido
+                    ? new Date(formPedidos.fechaPedido)
+                        .toISOString()
+                        .slice(0, 10)
+                    : ""
+                }
+                onChange={handleChangeFormPedidos}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Código</Form.Label>
+              <Form.Control
+                name="codigoPedido"
+                value={formPedidos.codigoPedido}
+                onChange={handleChangeFormPedidos}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Posicion</Form.Label>
+              <Form.Control
+                name="posicion"
+                type="number"
+                value={formPedidos.posicion}
+                onChange={handleChangeFormPedidos}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Importe</Form.Label>
+              <Form.Control
+                name="importe"
+                type="number"
+                value={formPedidos.importe}
+                onChange={handleChangeFormPedidos}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Observaciones</Form.Label>
+              <Form.Control
+                name="observaciones"
+                value={formPedidos.observaciones}
+                onChange={handleChangeFormPedidos}
+              />
+            </Form.Group>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowModalPedidos(false)}
+          >
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleGuardarPedido}>
+            Guardar
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      {/* MODAL DE EDICION DE FACTURAS*/}
+      <Modal
+        show={showModalFacturas}
+        onHide={() => setShowModalFacturas(false)}
+      >
+        {" "}
+        <Modal.Header closeButton>
+          <Modal.Title>
+            {editIDFactura ? "Detalle factura" : "Nueva factura"}
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form>
+            <Form.Group className="mb-2">
+              <Form.Label>Pedido:</Form.Label>
+              <Form.Control
+                name="idPedido"
+                as="select"
+                value={formFacturas.idPedido}
+                onChange={handleChangeFormFacturas}
+              >
+                {pedidosObra.length > 0 ? (
+                  pedidosObra.map((pedido) => (
+                    <option key={pedido.id_pedido} value={pedido.id_pedido}>
+                      {`${pedido.codigo_pedido} - ${pedido.posicion}`}
+                    </option>
+                  ))
+                ) : (
+                  <option>Cargando pedidos...</option>
+                )}
+              </Form.Control>
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Fecha:</Form.Label>
+              <Form.Control
+                type="date"
+                name="fechaFactura"
+                value={
+                  formFacturas.fechaFactura
+                    ? new Date(formFacturas.fechaFactura)
+                        .toISOString()
+                        .slice(0, 10)
+                    : ""
+                }
+                onChange={handleChangeFormFacturas}
+              />
+            </Form.Group>
+            <Form.Group className="mb-2">
+              <Form.Label>Código:</Form.Label>
+              <Form.Control
+                name="codigo"
+                value={formFacturas.codigo}
+                onChange={handleChangeFormFacturas}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Posicion:</Form.Label>
+              <Form.Control
+                name="posicion"
+                type="number"
+                value={formFacturas.posicion}
+                onChange={handleChangeFormFacturas}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Importe:</Form.Label>
+              <Form.Control
+                name="importe"
+                type="number"
+                value={formFacturas.importe}
+                onChange={handleChangeFormFacturas}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Concepto F.:</Form.Label>
+              <Form.Control
+                name="conceptoFactura"
+                value={formFacturas.conceptoFactura}
+                onChange={handleChangeFormFacturas}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Concepto L.:</Form.Label>
+              <Form.Control
+                name="conceptoLinea"
+                value={formFacturas.conceptoLinea}
+                onChange={handleChangeFormFacturas}
+              />
+            </Form.Group>
+            <Form.Group>
+              <Form.Label>Observaciones</Form.Label>
+              <Form.Control
+                name="observaciones"
+                value={formFacturas.observaciones}
+                onChange={handleChangeFormFacturas}
+              />
+            </Form.Group>
+            <div className="d-flex align-items-center mt-3">
+              <Form.Check
+                name="cobrado"
+                type="checkbox"
+                label="Cobrado:"
+                checked={formFacturas.cobrado}
+                onChange={handleChangeFormFacturas}
+                className="me-3"
+              />
+
+              {formFacturas.cobrado && (
+                <Form.Control
+                  type="date"
+                  name="fechaCobro"
+                  value={
+                    formFacturas.fechaCobro
+                      ? new Date(formFacturas.fechaCobro)
+                          .toISOString()
+                          .slice(0, 10)
+                      : ""
+                  }
+                  onChange={handleChangeFormFacturas}
+                />
+              )}
+            </div>
+          </Form>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowModalFacturas(false)}
+          >
+            Cancelar
+          </Button>
+          <Button variant="primary" onClick={handleGuardarFactura}>
+            Guardar
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
+
+  //#endregion
 };
 
 export default DetalleObra;

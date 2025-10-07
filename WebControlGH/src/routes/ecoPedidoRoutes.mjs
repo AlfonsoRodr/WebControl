@@ -4,7 +4,10 @@ import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 
 const ecoPedidoRouter = Router();
 
-ecoPedidoRouter.get("/:idObra", EcoPedidoController.getByObra);
+ecoPedidoRouter.post("/buscar", EcoPedidoController.getByObras);
+ecoPedidoRouter.post("/", EcoPedidoController.create);
+ecoPedidoRouter.put("/:idPedido", EcoPedidoController.update);
+ecoPedidoRouter.delete("/:idPedido", EcoPedidoController.delete);
 
 ecoPedidoRouter.use(errorHandler);
 

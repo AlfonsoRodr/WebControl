@@ -18,6 +18,7 @@ import ecoFacturaRouter from "./routes/ecoFacturaRoutes.mjs";
 import ecoPedidoRouter from "./routes/ecoPedidoRoutes.mjs";
 import gastoRouter from "./routes/gastoRouter.mjs";
 import horasRouter from "./routes/horasRoutes.mjs";
+import movimientosAlmacenRouter from "./routes/MovimientosAlmacenRoutes.mjs";
 
 const app = express();
 const PORT = 3002;
@@ -44,6 +45,7 @@ app.use("/api/ecoPedido", ecoPedidoRouter);
 app.use("/api/ecoFactura", ecoFacturaRouter);
 app.use("/api/gastos", gastoRouter);
 app.use("/api/horas", horasRouter);
+app.use("/api/movimientos-almacen", movimientosAlmacenRouter);
 
 app.listen(PORT, () => {
   console.log(`Servidor corriendo en http://localhost:${PORT}`);
