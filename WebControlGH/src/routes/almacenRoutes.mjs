@@ -6,6 +6,7 @@ export const almacenRouter = Router();
 
 almacenRouter.get("/", AlmacenController.getAll);
 almacenRouter.get("/:idProducto", AlmacenController.getById);
+almacenRouter.get("/buscar/descripcion", AlmacenController.getByDescripcion);
 almacenRouter.post("/", AlmacenController.create);
 almacenRouter.put("/:idProducto", AlmacenController.update);
 almacenRouter.delete("/:idProducto", AlmacenController.delete);

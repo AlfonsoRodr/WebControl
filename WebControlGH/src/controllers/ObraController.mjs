@@ -72,11 +72,13 @@ export class ObraController {
       const { idObra } = req.params;
       const { codigoUsuarioBaja } = req.body;
 
+      /*
       if (!codigoUsuarioBaja) {
         const error = new Error("codigoUsuarioBaja es requerido para eliminar");
         error.name = "ValidationError";
         throw error;
-      }
+      }*/
+
       const obraEliminada = await ObraModel.delete({
         idObra: Number(idObra),
         codigoUsuarioBaja,

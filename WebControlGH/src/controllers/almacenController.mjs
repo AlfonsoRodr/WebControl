@@ -20,6 +20,16 @@ export class AlmacenController {
     }
   }
 
+  static async getByDescripcion(req, res, next) {
+    try {
+      const { descripcion } = req.query;
+      const productos = await AlmacenModel.getByDescripcion({ descripcion });
+      res.json({ success: true, data: productos });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async create(req, res, next) {
     try {
       const input = req.body;

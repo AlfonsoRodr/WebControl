@@ -38,6 +38,16 @@ export class FacturasController {
     }
   }
 
+  static async getByConcepto(req, res, next) {
+    try {
+      const { concepto } = req.query;
+      const facturas = await FacturasModel.getByConcepto({ concepto });
+      res.json({ success: true, data: facturas });
+    } catch (error) {
+      next(error);
+    }
+  }
+
   static async create(req, res, next) {
     try {
       const input = req.body;
@@ -74,11 +84,13 @@ export class FacturasController {
       const { id } = req.params;
       const { codigoUsuarioBaja } = req.body;
 
+      /*
       if (!codigoUsuarioBaja) {
         const error = new Error("codigoUsuarioBaja es requerido para eliminar");
         error.name = "ValidationError";
         throw error;
-      }
+      }*/
+
       const facturaEliminada = await FacturasModel.delete({
         id: Number(id),
         codigoUsuarioBaja,

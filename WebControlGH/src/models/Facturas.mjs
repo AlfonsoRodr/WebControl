@@ -3,6 +3,7 @@ import {
   validateFactura,
   validatePartialFactura,
 } from "../validations/facturasValidator.mjs";
+import { ValidationError } from "../validations/ValidationError.mjs";
 
 export class FacturasModel {
   static async getAll() {
@@ -38,7 +39,7 @@ export class FacturasModel {
         FROM facturascompras_obra AS fo
         LEFT JOIN facturascompras fc ON fo.id_facturascompras = fc.id
         LEFT JOIN usuarios AS u ON fo.codigo_usuario_alta = u.codigo_usuario
-        WHERE fo.id_obra = ?`;
+        WHERE fo.id_obra = ? AND fo.fecha_baja IS NULL`;
 
     const [result] = await db.query(query, [idObra]);
     return result;
@@ -55,14 +56,29 @@ export class FacturasModel {
     return result[0] ?? null;
   }
 
+  static async getByConcepto({ concepto }) {
+    const query = `
+    SELECT
+      id,
+      Numero,
+      Concepto
+    FROM
+      facturascompras
+    WHERE
+      Concepto LIKE CONCAT('%', ?, '%')`;
+
+    const [result] = await db.query(query, concepto);
+    return result;
+  }
+
   static async create({ input }) {
     const validatedData = validateFactura(input);
 
     if (!validatedData.success) {
-      const error = new Error("Validation Failed");
-      error.name = "ValidationError";
-      error.details = validatedData.error.format();
-      throw error;
+      throw new ValidationError(
+        "Factura con formacto inválido",
+        validatedData.error.issues
+      );
     }
 
     const validData = validatedData.data;
@@ -76,7 +92,7 @@ export class FacturasModel {
       validData.fechaBaja,
       validData.codigoUsuarioBaja,
       validData.observaciones,
-      validData.version,
+      validData.version || 0,
     ];
 
     const [result] = await db.query(
@@ -158,7 +174,7 @@ export class FacturasModel {
     return rows[0] ?? null;
   }
 
-  static async delete({ id, codigoUsuarioBaja }) {
+  static async delete({ id, codigoUsuarioBaja = 67 } = {}) {
     const [result] = await db.query(
       `UPDATE facturascompras_obra 
          SET fecha_baja = NOW(), codigo_usuario_baja = ?

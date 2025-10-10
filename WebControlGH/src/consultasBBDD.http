@@ -4,42 +4,33 @@
 GET http://localhost:3002/api/facturas
 
 ### GET FACTURA BY ID
-GET http://localhost:3002/api/facturas/1/detalles
+GET http://localhost:3002/api/facturas/209
 
 ### GET FACTURAS BY OBRAS
 GET http://localhost:3002/api/facturas/obra/1503
 
+### GET BY CONCEPTO
+GET http://localhost:3002/api/facturas/buscar/concepto?concepto=SAMSUNG
+
 ### NUEVA FACTURA
-POST http://localhost:3002/facturas
+POST http://localhost:3002/api/facturas/209
 Content-Type: application/json
 
 {
-    "origen": "Proveedor Z",
-    "pedido_pos": 199,   
-    "obra": "Obra 1",
-    "fecha": "2025-09-05",
-    "concepto_f": "",
-    "concepto_l": "",
-    "cobrado": 0,
-    "importe": 500,
-    "obs_imp": "",
-    "importe_base": 500,     
-    "iva": 14,               
-    "factura_num": "FAC001"
+    "codigoUsuarioAlta": 67,
+    "fechaAlta": "2025-10-09",
+    "idFacturasCompras": 313,
+    "idObra": 1503,
+    "importe": "12",
+    "observaciones": "Esta es una compra de prueba"
 }
 
-
-### PUT
-
-PUT http://localhost:3002/facturas/15
+### ACTUALIZAR FACTURA
+PATCH  http://localhost:3002/api/facturas/3
 Content-Type: application/json
 
 {
-    "cobrado": 1,
-    "importe": 500,
-    "obs_imp": "Pagado",
-    "importe_base": 500,     
-    "iva": 14               
+    "observaciones": "Observaciones actualizadas"               
 }
 
 ### DELETE FACTURA
@@ -52,7 +43,7 @@ DELETE http://localhost:3002/facturas/15
 GET http://localhost:3002/api/obra
 
 ### GET Obra específica
-GET http://localhost:3002/api/obra/3271
+GET http://localhost:3002/api/obra/1503
 
 ### GET Obras por descripción
 GET http://localhost:3002/api/obra/buscar/descripcion?descripcionObra=Cambio
@@ -84,29 +75,30 @@ Content-Type: application/json
 }
 
 ### Actualizar obra
-PUT http://localhost:3002/api/obra/5302
+PUT http://localhost:3002/api/obra/1503
 Content-Type: application/json
 
 {
-    "cod": "000A",
-    "desc": "Instalación de alarma",
-    "fechaSeg": "2025-04-04",
-    "tipoObra": 3,
-    "facturable": 1,
+    "cod": "1483C10064P025-R0",
+    "contacto": 12,
+    "desc": "INST CPD INTERXION-MAD2 - FASE II",
+    "descSeg": null,
+    "edificio": 275,
+    "empresa": 3,
     "estadoObra": 4,
-    "fechaAlta": "2025-04-04",
+    "facturable": 2,
+    "fechaAlta": "2015-07-02",
+    "fechaFin": null,
+    "fechaOferta": "2015-07-01",
+    "fechaSeg": null,
+    "gastoPrevisto": 0,
+    "horasPrevistas": 0,
+    "importe": 14966.6,
+    "observaciones": "",
+    "observacionesInternas": "",
+    "tipoObra": 8,
     "usuarioAlta": 4,
-    "fechaFin": "2025-06-04",
-    "fechaOferta": "2025-04-04",
-    "horasPrevistas": 30,
-    "gastoPrevisto": 200,
-    "importe": 100,
-    "viabilidad": 100,
-    "empresa": 2,
-    "contacto": 3,
-    "edificio": 39,
-    "observaciones": "Esto es una obra actualizada de prueba",
-    "observacionesInternas": "Esto es una obra actualizada de prueba"
+    "viabilidad": 100
 }
 
 ### Eliminar obra
@@ -130,6 +122,9 @@ GET http://localhost:3002/api/almacen
 
 ### Obtener un producto específico
 GET http://localhost:3002/api/almacen/244
+
+### Obtener un producto por la descripción
+GET http://localhost:3002/api/almacen/buscar/descripcion?descripcion=cable
 
 ### Crear un producto
 POST http://localhost:3002/api/almacen
