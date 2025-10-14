@@ -38,6 +38,16 @@ export class FacturasController {
 		}
 	}
 
+	static async getByConcepto(req, res, next) {
+		try {
+			const { concepto } = req.query;
+			const facturas = await FacturasModel.getByConcepto({ concepto });
+			res.json({ success: true, data: facturas });
+		} catch (error) {
+			next(error);
+		}
+	}
+
 	static async create(req, res, next) {
 		try {
 			const input = req.body;
@@ -90,7 +100,7 @@ export class FacturasController {
 				throw error;
 			}
 			res.json({ success: true, data: facturaEliminada });
-		} 
+		}
 		catch (error) {
 			next(error);
 		}

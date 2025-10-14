@@ -11,8 +11,7 @@ export class MovimientosAlmacenModel {
             u.codigo_firma,
             t.etiqueta AS tipo_movimiento,
             c.etiqueta AS concepto_movimiento,
-            f.Numero AS numero_factura,
-            o.codigo_obra
+            f.Numero AS numero_factura
         FROM
             movimiento_almacen AS ma
         LEFT JOIN
@@ -25,10 +24,8 @@ export class MovimientosAlmacenModel {
             conceptomovimiento AS c ON ma.id_conceptomovimiento = c.id
         LEFT JOIN 
             facturascompras AS f ON ma.id_facturascompras = f.id
-        LEFT JOIN
-            obras AS o ON ma.id_obra = o.id_obra
         WHERE
-            ma.id_obra = ?`;
+            ma.id_obra = ? AND ma.fecha_baja IS NULL`;
 
     const [result] = await db.query(query, [idObra]);
     return result;
@@ -46,9 +43,10 @@ export class MovimientosAlmacenModel {
     importe,
     observaciones,
     id_facturascompras,
-    id_obra
+    id_obra,
+    version
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`;
 
     const values = [
       input.idReferencia,

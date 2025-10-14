@@ -16,7 +16,6 @@ const facturaObraSchema = zod.object({
     })
     .int()
     .positive(),
-
   importe: zod
     .number({
       required_error: "El importe es requerido",
@@ -77,7 +76,8 @@ const facturaObraSchema = zod.object({
       invalid_type_error: "La versión debe ser un número",
     })
     .int()
-    .positive(),
+    .positive()
+    .optional(),
 });
 
 export function validateFactura(object) {

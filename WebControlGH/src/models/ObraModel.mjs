@@ -1,5 +1,9 @@
 import { db } from "../database.js";
-import { validateObra } from "../validations/obrasValidator.mjs";
+import {
+  validateObra,
+  validatePartialObra,
+} from "../validations/obrasValidator.mjs";
+import { ValidationError } from "../validations/ValidationError.mjs";
 
 export class ObraModel {
   static async getAll() {
@@ -53,7 +57,7 @@ export class ObraModel {
     SELECT
       o.*,
       tipoO.descripcion AS desc_tipo_obra,
-      tf.descripcion AS facturable,
+      tf.descripcion AS desc_facturable,
       te.descripcion_estado AS desc_estado_obra,
       u.nombre AS nombre_usuario,
       u.apellido1 AS apellido_1_usuario,
@@ -105,8 +109,8 @@ export class ObraModel {
       obras
     WHERE
       descripcion_obra LIKE CONCAT('%', ?, '%')`;
-    
-    const [result] = await db.query(query, descripcionObra)
+
+    const [result] = await db.query(query, descripcionObra);
     return result;
   }
 
@@ -188,9 +192,10 @@ export class ObraModel {
     const updatedInfo = validateObra(input);
 
     if (!updatedInfo.success) {
-      const error = new Error("Validation failed");
-      error.name = "ValidationError";
-      throw error;
+      throw new ValidationError(
+        "Obra con formato inválido",
+        updatedInfo.error.issues
+      );
     }
 
     const valid = updatedInfo.data;
@@ -203,6 +208,7 @@ export class ObraModel {
       codigo_obra = ?,
       descripcion_obra = ?,
       fecha_seg = ?,
+      descripcion_seg = ?,
       tipo_obra = ?,
       facturable = ?,
       estado_obra = ?,
@@ -253,7 +259,9 @@ export class ObraModel {
     return rows[0] ?? null;
   }
 
-  static async delete({ idObra, codigoUsuarioBaja }) {
+  // TEMPORAL -> De momento el usuario por defecto que da de bajas las obras
+  // es el usuario 67 (andres_abaco)
+  static async delete({ idObra, codigoUsuarioBaja = 67 } = {}) {
     const query = `
     UPDATE obras
     SET

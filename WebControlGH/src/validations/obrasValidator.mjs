@@ -12,10 +12,16 @@ const obraSchema = zod.object({
   }),
   fechaSeg: zod
     .string()
-    .optional()
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "La fechaAlta debe tener un formato válido",
-    }),
+    })
+    .nullish(),
+  descSeg: zod
+    .string({
+      invalid_type_error:
+        "La descripción del seguimiento debe ser una cadena de texto",
+    })
+    .optional(),
   tipoObra: zod
     .number({
       required_error: "El tipo de obra es requerido",
@@ -53,28 +59,26 @@ const obraSchema = zod.object({
     .positive(),
   fechaFin: zod
     .string()
-    .optional()
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "La fecha prevista de fin debe tener un formato válido",
-    }),
+    })
+    .nullish(),
   fechaOferta: zod
     .string()
-    .optional()
     .refine((val) => !isNaN(Date.parse(val)), {
       message: "La fecha de oferta debe tener un formato válido",
-    }),
+    })
+    .nullish(),
   horasPrevistas: zod
     .number({
       invalid_type_error: "Las horas previstas debe ser un número",
     })
-    .int()
-    .positive(),
+    .int(),
   gastoPrevisto: zod
     .number({
       invalid_type_error: "El gasto debe ser un número",
     })
-    .int()
-    .positive(),
+    .int(),
   importe: zod
     .number({
       required_error: "El importe es requerido",

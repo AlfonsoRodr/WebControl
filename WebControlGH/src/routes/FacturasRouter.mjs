@@ -5,8 +5,9 @@ import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 export const facturasRouter = Router();
 
 facturasRouter.get("/", FacturasController.getAll);
-facturasRouter.get("/obra/:idObra", FacturasController.getByObra);
+facturasRouter.get("/obra/:idObra", FacturasController.getByObra); // Este endpoint no cumplelas buenas prácticas, debería de pertenecer a /api/obras
 facturasRouter.get("/:id", FacturasController.getById);
+facturasRouter.get("/buscar/concepto", FacturasController.getByConcepto); // Este endpoint no sigue las buenas prácticas de una API REST
 facturasRouter.post("/", FacturasController.create);
 facturasRouter.patch("/:id", FacturasController.update);
 facturasRouter.delete("/:id", FacturasController.delete);

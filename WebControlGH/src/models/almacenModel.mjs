@@ -80,6 +80,20 @@ export class AlmacenModel {
     return result;
   }
 
+  static async getByDescripcion({ descripcion }) {
+    const query = `
+    SELECT
+      id,
+      descripcion
+    FROM
+      almacen
+    WHERE
+      descripcion LIKE CONCAT('%', ?, '%')`;
+
+    const [result] = await db.query(query, descripcion);
+    return result;
+  }
+
   static async create({ input }) {
     const validatedProducto = validateProducto(input);
 
@@ -116,7 +130,7 @@ export class AlmacenModel {
     // -> 1º El array de resultados (filas de la consulta)
     // ->2º Metadatos: Información adicional sobre la consulta
 
-    // El principio de desestructuración de JS es posicional, no nombrado. 
+    // El principio de desestructuración de JS es posicional, no nombrado.
     // Con esto extraemos el resultado de la consulta
     const [result] = await db.query(insertQuery, values);
 
