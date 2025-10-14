@@ -5,6 +5,7 @@ import { errorHandler } from "../middlewares/ErrorHandler.mjs";
 const contactoRouter = Router();
 
 contactoRouter.get("/:idEmpresa", ContactoController.getByEmpresa);
+contactoRouter.get("/", ContactoController.getAll);
 
 contactoRouter.use(errorHandler);
 

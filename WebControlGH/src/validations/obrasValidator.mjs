@@ -132,5 +132,5 @@ export function validateObra(object) {
 }
 
 export function validatePartialObra(objetc) {
-  return obraSchema.partial.safeParse(objetc);
+  return obraSchema.partial().safeParse(objetc);
 }

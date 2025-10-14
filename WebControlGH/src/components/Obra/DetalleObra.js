@@ -649,7 +649,7 @@ const DetalleObra = () => {
     if (window.confirm("¿Estás seguro de eliminar esta factura?")) {
       try {
         await axios.delete(`http://localhost:3002/api/ecoFactura/${id}`);
-        fetchFacturasCompras([idObra], "Padre");
+        fetchFacturas([idObra], "Padre");
       } catch (error) {
         console.error(`Error al eliminar la factura - ${error}`);
       }
@@ -957,16 +957,36 @@ const DetalleObra = () => {
 
   const agregarObraHija = (obra) => {
     if (!obrasHijasSeleccionadas.some((o) => o.id_obra === obra.id_obra)) {
-      setObrasHijasSeleccionadas([...obrasHijasSeleccionadas, obra]);
+      setObrasHijasSeleccionadas(() => {
+        const nuevoValor = [...obrasHijasSeleccionadas, obra];
+        const idsObrasHijas = nuevoValor.map((obraHija) => obraHija.id_obra);
+        // Fetch de los gastos, horas, horas extra, pedidos y facturas de las obras hijas
+        fetchGastos(idsObrasHijas, "Hijas");
+        fetchHoras(idsObrasHijas, "Hijas");
+        fetchHorasExtra(idsObrasHijas, "Hijas");
+        fetchPedidos(idsObrasHijas, "Hijas");
+        fetchFacturas(idsObrasHijas, "Hijas");
+        return nuevoValor;
+      });
     }
     setObraHijaBusqueda("");
     setSugerenciasHijas([]);
   };
 
   const eliminarObraHija = (idObra) => {
-    setObrasHijasSeleccionadas(
-      obrasHijasSeleccionadas.filter((o) => o.id_obra !== idObra)
-    );
+    setObrasHijasSeleccionadas(() => {
+      const nuevoValor = obrasHijasSeleccionadas.filter(
+        (o) => o.id_obra !== idObra
+      );
+      const idsObrasHijas = nuevoValor.map((obraHija) => obraHija.id_obra);
+      // Fetch de los gastos, horas, horas extra, pedidos y facturas de las obras hijas
+      fetchGastos(idsObrasHijas, "Hijas");
+      fetchHoras(idsObrasHijas, "Hijas");
+      fetchHorasExtra(idsObrasHijas, "Hijas");
+      fetchPedidos(idsObrasHijas, "Hijas");
+      fetchFacturas(idsObrasHijas, "Hijas");
+      return nuevoValor;
+    });
   };
 
   //#endregion
@@ -1226,8 +1246,7 @@ const DetalleObra = () => {
   };
 
   const handleGuardarCambios = () => {
-    console.log("Guardando cambios...");
-    console.log(formObra);
+    // QUIZÁS HABRÍA QUE AÑADIR AQUÍ UN GUARDADO DE LOS DATOS DE RENTABILIDAD
     handleGuardarRelacionPadre();
     handleGuardarRelacionHijas();
     handleGuardarObra();
@@ -1915,12 +1934,9 @@ const DetalleObra = () => {
               <p>Total Importe Pedidos: {totalImportePedidos.toFixed(2)}</p>
               <p>
                 % Pedido de la Obra:{" "}
-                {rentabilidadObra
-                  ? (
-                      (totalImportePedidos / rentabilidadObra.importe) *
-                      100
-                    ).toFixed(2)
-                  : "No hay datos registrados"}
+                {((totalImportePedidos / filteredObra.importe) * 100).toFixed(
+                  2
+                )}
               </p>{" "}
               {/* Muestra el porcentaje de la obra */}
             </div>
@@ -2004,12 +2020,9 @@ const DetalleObra = () => {
               <p>Total Importe Facturas: {totalImporteFacturas.toFixed(2)}</p>
               <p>
                 % Facturado de la Obra:{" "}
-                {rentabilidadObra
-                  ? (
-                      (totalImporteFacturas / rentabilidadObra.importe) *
-                      100
-                    ).toFixed(2)
-                  : "No hay datos registrados"}
+                {((totalImporteFacturas / filteredObra.importe) * 100).toFixed(
+                  2
+                )}
               </p>{" "}
               {/* Muestra el porcentaje de la obra */}
             </div>
@@ -2482,7 +2495,7 @@ const DetalleObra = () => {
               <p>
                 Total Gastos/Horas de la Obra:{" "}
                 {(
-                  rentabilidadObra.gastoPersonal +
+                  totalImporteHoras +
                   totalImporteHorasExtra +
                   totalImporteGastos
                 ).toFixed(2)}
@@ -2774,108 +2787,79 @@ const DetalleObra = () => {
                 }}
               >
                 <p>
-                  <strong>H.Previstas</strong>:{" "}
-                  {rentabilidadObra
-                    ? rentabilidadObra.horas_previstas
-                    : "No hay datos registrados"}
+                  <strong>H.Previstas</strong>: {filteredObra.horas_previstas}
                 </p>
                 <p>
-                  <strong>H. Reales</strong>:{" "}
-                  {rentabilidadObra
-                    ? rentabilidadObra.horasReal
-                    : "No hay datos registrados"}
+                  <strong>H. Reales</strong>: {totalHoras}
                 </p>
                 <p>
                   <strong>Gasto Personal (GP)</strong>:{" "}
-                  {rentabilidadObra
-                    ? rentabilidadObra.gastoPersonal
-                    : "No hay datos registrados"}
+                  {totalImporteHoras.toFixed(2)}
                 </p>
                 <p>
-                  <strong>H. Totales</strong>:{" "}
-                  {rentabilidadObra
-                    ? rentabilidadObra.horasTotal
-                    : "No hay datos registrados"}
+                  <strong>H. Totales</strong>: {totalHoras + totalHorasExtra}
                 </p>
                 <p>
                   <strong>G.Personal Total (GP + GHE)</strong>:{" "}
-                  {rentabilidadObra
-                    ? rentabilidadObra.gastoPersonal + totalImporteHorasExtra
-                    : "No hay datos registrados"}
+                  {(totalImporteHoras + totalImporteHorasExtra).toFixed(2)}
                 </p>
                 <p>
-                  <strong>H.Extra</strong>:{" "}
-                  {totalHorasExtra
-                    ? totalHorasExtra
-                    : "No hay datos registrados"}
+                  <strong>H.Extra</strong>: {totalHorasExtra}
                 </p>
                 <p>
-                  <strong>Gasto H.Extra (GHE)</strong>:
-                  {totalImporteHorasExtra
-                    ? totalImporteHorasExtra
-                    : "No hay datos registrados"}
+                  <strong>Gasto H.Extra (GHE)</strong>:{totalImporteHorasExtra}
                 </p>
                 <p>
-                  <strong>Gasto Prev</strong>:{" "}
-                  {rentabilidadObra
-                    ? rentabilidadObra.gasto_previsto
-                    : "No hay datos registrados"}
+                  <strong>Gasto Prev</strong>: {filteredObra.gasto_previsto}
                 </p>
                 <p>
-                  <strong>G.Real (GR)</strong>: {totalImporteGastos ?? 0}
+                  <strong>G.Real (GR)</strong>: {totalImporteGastos}
                 </p>
                 <p>
                   <strong>G.Almacen (GA)</strong>:{" "}
-                  {totalImporteMovimientosAlmacen ?? 0}
+                  {totalImporteMovimientosAlmacen}
                 </p>
                 <p>
-                  <strong>G.Compras (GC)</strong>: {totalImporteCompras ?? 0}
+                  <strong>G.Compras (GC)</strong>: {totalImporteCompras}
                 </p>
                 <p>
-                  <strong>Importe</strong>:
-                  {rentabilidadObra
-                    ? rentabilidadObra.importe
-                    : "No hay datos registrados"}
+                  <strong>Importe</strong>:{filteredObra.importe}
                 </p>
                 <p>
-                  <strong>Sum P</strong>:
-                  {rentabilidadObra
-                    ? rentabilidadObra.sumPedido
-                    : "No hay datos registrados"}
+                  <strong>Sum P</strong>:{totalImportePedidos.toFixed(2)}
                 </p>
                 <p>
-                  <strong>Sum F</strong>:
-                  {rentabilidadObra
-                    ? rentabilidadObra.sumFactura
-                    : "No hay datos registrados"}
+                  <strong>Sum F</strong>:{totalImporteFacturas.toFixed(2)}
                 </p>
                 <p>
                   <strong>Pte P</strong>:
-                  {rentabilidadObra
-                    ? rentabilidadObra.importe - rentabilidadObra.sumPedido
-                    : "No hay datos registrados"}
+                  {((totalImportePedidos / filteredObra.importe) * 100).toFixed(
+                    2
+                  )}
                 </p>
                 <p>
                   <strong>Pte F</strong>:
-                  {rentabilidadObra
-                    ? rentabilidadObra.importe - rentabilidadObra.sumFactura
-                    : "No hay datos registrados"}
+                  {(
+                    (totalImporteFacturas / filteredObra.importe) *
+                    100
+                  ).toFixed(2)}
                 </p>
                 <p>
                   <strong>G.Total (GP + GR + GHE + GA + GC)</strong>:{" "}
-                  {gastoTotal}
+                  {gastoTotal.toFixed(2)}
                 </p>
                 <p>
                   <strong>Rentabilidad</strong>:{" "}
-                  {rentabilidadObra
-                    ? rentabilidadObra.rentabilidad
-                    : "No hay datos registrados"}
+                  {(filteredObra.importe - gastoTotal).toFixed(2)}
                 </p>
                 <p>
                   <strong>%Rent</strong>:
-                  {rentabilidadObra
-                    ? rentabilidadObra.rentabilidadPorcentaje
-                    : "No hay datos registrados"}
+                  {filteredObra.importe !== 0
+                    ? (
+                        ((filteredObra.importe - gastoTotal) * 100) /
+                        filteredObra.importe
+                      ).toFixed(2)
+                    : 0}
                 </p>
               </div>
             </div>
@@ -3010,9 +2994,7 @@ const DetalleObra = () => {
                   >
                     <p>
                       <strong>Importe: </strong>
-                      {rentabilidadObra
-                        ? rentabilidadObra.importe + totalImporteObrasSub
-                        : totalImporteObrasSub}
+                      {filteredObra.importe + totalImporteObrasSub}
                     </p>
                     <p>
                       <strong>G.Total:</strong>{" "}
@@ -3020,23 +3002,23 @@ const DetalleObra = () => {
                     </p>
                     <p>
                       <strong>Rentabilidad: </strong>
-                      {rentabilidadObra
-                        ? totalImporteObrasSub -
-                          gastoTotalSub +
-                          rentabilidadObra.rentabilidad
-                        : "Faltan datos para el cálculo"}
+                      {(
+                        totalImporteObrasSub -
+                        gastoTotalSub +
+                        filteredObra.importe -
+                        gastoTotal
+                      ).toFixed(2)}
                     </p>
                     <p>
                       <strong>%Rent:</strong>{" "}
-                      {rentabilidadObra
-                        ? (
-                            ((totalImporteObrasSub -
-                              gastoTotalSub +
-                              rentabilidadObra.rentabilidad) *
-                              100) /
-                            rentabilidadObra.importe
-                          ).toFixed(2)
-                        : "Faltan datos para el cálculo"}
+                      {(
+                        ((totalImporteObrasSub -
+                          gastoTotalSub +
+                          filteredObra.importe -
+                          gastoTotal) *
+                          100) /
+                        (filteredObra.importe + totalImporteObrasSub)
+                      ).toFixed(2)}
                     </p>
                   </div>
                 </div>

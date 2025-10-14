@@ -53,52 +53,34 @@ POST http://localhost:3002/api/obra
 Content-Type: application/json
 
 {
-    "cod": "000A",
-    "desc": "Instalación de alarma",
-    "fechaSeg": "2025-04-04",
-    "tipoObra": 3,
-    "facturable": 1,
-    "estadoObra": 4,
-    "fechaAlta": "2025-04-04",
-    "usuarioAlta": 4,
-    "fechaFin": "2025-06-04",
-    "fechaOferta": "2025-04-04",
-    "horasPrevistas": 30,
-    "gastoPrevisto": 200,
-    "importe": 100,
+    "cod": "1234567890",
+    "desc": "",
+    "fechaSeg": "",
+    "descSeg": "",
+    "tipoObra": "",
+    "facturable": "",
+    "estadoObra": "",
+    "fechaAlta": "",
+    "usuarioAlta": "",
+    "fechaFin": "",
+    "fechaOferta": "",
+    "horasPrevistas": 0,
+    "gastoPrevisto": 0,
+    "importe": 0,
     "viabilidad": 100,
-    "empresa": 2,
-    "contacto": 3,
-    "edificio": 39,
-    "observaciones": "Esta es una obra creada de prueba",
-    "observacionesInternas": "Esta es una obra creada de prueba"
+    "empresa": "",
+    "contacto": "",
+    "edificio": "",
+    "observaciones": "",
+    "observacionesInternas": ""
 }
 
 ### Actualizar obra
-PUT http://localhost:3002/api/obra/1503
+PUT http://localhost:3002/api/obra/5303
 Content-Type: application/json
 
 {
-    "cod": "1483C10064P025-R0",
-    "contacto": 12,
-    "desc": "INST CPD INTERXION-MAD2 - FASE II",
-    "descSeg": null,
-    "edificio": 275,
-    "empresa": 3,
-    "estadoObra": 4,
-    "facturable": 2,
-    "fechaAlta": "2015-07-02",
-    "fechaFin": null,
-    "fechaOferta": "2015-07-01",
-    "fechaSeg": null,
-    "gastoPrevisto": 0,
-    "horasPrevistas": 0,
-    "importe": 14966.6,
-    "observaciones": "",
-    "observacionesInternas": "",
-    "tipoObra": 8,
-    "usuarioAlta": 4,
-    "viabilidad": 100
+    "estadoObra": 4
 }
 
 ### Eliminar obra
@@ -121,7 +103,7 @@ GET http://localhost:3002/api/tipos-obra
 GET http://localhost:3002/api/almacen
 
 ### Obtener un producto específico
-GET http://localhost:3002/api/almacen/244
+GET http://localhost:3002/api/almacen/1
 
 ### Obtener un producto por la descripción
 GET http://localhost:3002/api/almacen/buscar/descripcion?descripcion=cable
@@ -182,6 +164,9 @@ Content-Type: application/json
 
 ### Obtener contacto por id de empresa
 GET http://localhost:3002/api/contacto/2
+
+### Obtener todos los contactos
+GET http://localhost:3002/api/contacto
 
 ###### ENDPOINTS EDIFICIO #############
 

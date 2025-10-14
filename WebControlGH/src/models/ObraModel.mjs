@@ -9,27 +9,17 @@ export class ObraModel {
   static async getAll() {
     const query = `
     SELECT
-      o.id_obra,
-      o.codigo_obra,
-      o.descripcion_obra,
-      o.tipo_obra,
+      o.*,
       tipoO.descripcion AS desc_tipo_obra,
-      o.estado_obra,
-      te.descripcion_estado AS desc_estado_obra,
-      o.id_empresa,
+      te.descripcion_estado AS desc_estado_obra,      
       e.nombre AS nombre_empresa,
-      o.fecha_oferta,
-      o.observaciones,
-      o.observaciones_internas,
-      o.fecha_seg,
-      o.descripcion_seg,
-      o.horas_previstas,
       r.rentabilidadPorcentaje,
       r.gastoGeneral,
-      r.ptePedido,
-      r.pteFactura,
-      r.pteObra,
-      r.horasTotal
+      r.horasTotal,
+      COALESCE(p.total_pedidos, 0) AS total_pedidos,
+      COALESCE(f.total_facturas, 0) AS total_facturas,
+      f.fecha_ultima_factura,
+      COALESCE (h.total_horas, 0) AS total_horas
     
     FROM 
       obras AS o
@@ -45,6 +35,22 @@ export class ObraModel {
     
     LEFT JOIN
       rentabilidad AS r ON o.id_obra = r.id_obra
+    
+    LEFT JOIN (
+      SELECT id_obra, SUM(importe) AS total_pedidos FROM ecopedido GROUP BY id_obra
+    ) AS p ON o.id_obra = p.id_obra
+
+    LEFT JOIN (
+      SELECT id_obra, SUM(importe) AS total_facturas, MAX(fecha) AS fecha_ultima_factura 
+      FROM ecofactura 
+      GROUP BY id_obra
+    ) AS f ON o.id_obra = f.id_obra
+    
+    LEFT JOIN (
+	    SELECT id_obra, SUM(num_horas) AS total_horas
+      FROM horasobra
+      GROUP BY id_obra
+    ) AS h ON o.id_obra = h.id_obra
     
     ORDER BY o.codigo_obra;`;
 
@@ -136,6 +142,7 @@ export class ObraModel {
         codigo_obra,
         descripcion_obra,
         fecha_seg,
+        descripcion_seg,
         tipo_obra,
         facturable,
         estado_obra,
@@ -153,7 +160,7 @@ export class ObraModel {
         observaciones,
         observaciones_internas,
         version
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`;
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0)`;
 
     const [result] = await db.query(query, [...values]);
 
@@ -162,6 +169,7 @@ export class ObraModel {
     const [rows] = await db.query(
       `
        SELECT
+        id_obra,
         codigo_obra,
         descripcion_obra,
         fecha_seg,
@@ -189,7 +197,7 @@ export class ObraModel {
   }
 
   static async update({ idObra, input }) {
-    const updatedInfo = validateObra(input);
+    const updatedInfo = validatePartialObra(input);
 
     if (!updatedInfo.success) {
       throw new ValidationError(
@@ -199,59 +207,72 @@ export class ObraModel {
     }
 
     const valid = updatedInfo.data;
+
+    if (Object.keys(valid).length === 0) {
+      const error = new Error("No fields provided for update");
+      error.name = "EmptyUpdateError";
+      throw error;
+    }
+
+    const fields = Object.keys(valid)
+      .map((key) => {
+        switch (key) {
+          case "cod":
+            return "codigo_obra = ?";
+          case "desc":
+            return "descripcion_obra = ?";
+          case "fechaSeg":
+            return "fecha_seg = ?";
+          case "descSeg":
+            return "descripcion_seg = ?";
+          case "tipoObra":
+            return "tipo_obra = ?";
+          case "facturable":
+            return "facturable = ?";
+          case "estadoObra":
+            return "estado_obra = ?";
+          case "fechaAlta":
+            return "fecha_alta = ?";
+          case "usuarioAlta":
+            return "codigo_usuario_alta = ?";
+          case "fechaFin":
+            return "fecha_prevista_fin = ?";
+          case "fechaOferta":
+            return "fecha_oferta = ?";
+          case "horasPrevistas":
+            return "horas_previstas = ?";
+          case "gastoPrevisto":
+            return "gasto_previsto = ?";
+          case "importe":
+            return "importe = ?";
+          case "viabilidad":
+            return "viabilidad = ?";
+          case "empresa":
+            return "id_empresa = ?";
+          case "contacto":
+            return "id_contacto = ?";
+          case "edificio":
+            return "id_edificio = ?";
+          case "observaciones":
+            return "observaciones = ?";
+          case "observacionesInternas":
+            return "observaciones_internas = ?";
+        }
+      })
+      .join(", ");
+
     const values = Object.values(valid);
 
-    const query = `
-    UPDATE 
-      obras
-    SET
-      codigo_obra = ?,
-      descripcion_obra = ?,
-      fecha_seg = ?,
-      descripcion_seg = ?,
-      tipo_obra = ?,
-      facturable = ?,
-      estado_obra = ?,
-      fecha_alta = ?,
-      codigo_usuario_alta = ?,
-      fecha_prevista_fin = ?,
-      fecha_oferta = ?,
-      horas_previstas = ?,
-      gasto_previsto = ?,
-      importe = ?,
-      viabilidad = ?,
-      id_empresa = ?,
-      id_contacto = ?,
-      id_edificio = ?,
-      observaciones = ?,
-      observaciones_internas = ?
-    WHERE
-      id_obra = ?`;
-
-    await db.query(query, [...values, idObra]);
+    await db.query(
+      `UPDATE obras
+      SET  ${fields}
+      WHERE id_obra = ?`,
+      [...values, idObra]
+    );
 
     const [rows] = await db.query(
       `
-       SELECT
-        codigo_obra,
-        descripcion_obra,
-        fecha_seg,
-        tipo_obra,
-        facturable,
-        estado_obra,
-        fecha_alta,
-        codigo_usuario_alta,
-        fecha_prevista_fin,
-        fecha_oferta,
-        horas_previstas,
-        gasto_previsto,
-        importe,
-        viabilidad,
-        id_empresa,
-        id_contacto,
-        id_edificio,
-        observaciones,
-        observaciones_internas
+       SELECT *
       FROM obras
       WHERE id_obra = ?`,
       [idObra]

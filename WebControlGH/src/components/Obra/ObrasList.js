@@ -17,38 +17,77 @@ import axios from "axios";
 
 // Componente ObrasList
 const ObrasList = () => {
+  // ------------------- ESTADOS ------------------- \\
+
+  //#region ESTADOS PARA LA BUSQUEDA/SELECCIÓN DE OBRAS
   const [searchTerm, setSearchTerm] = useState(""); // Estado para el término de búsqueda
   const [filteredObras, setFilteredObras] = useState([]); // Estado para las obras filtradas
   const [selectedObras, setSelectedObras] = useState([]); // Estado para las obras seleccionadas
   const [selectAll, setSelectAll] = useState(false); // Estado para el checkbox de seleccionar todo
-  const [obrasSuperadas, setObrasSuperadas] = useState(0); // Estado para el conteo de obras superadas
-  const [obrasFacturadas, setObrasFacturadas] = useState(0); // Estado para el conteo de obras facturadas
-  const [obrasSeguimiento, setObrasSeguimiento] = useState(0); // Estado para el conteo de obras en seguimiento
-  const [currentPage, setCurrentPage] = useState(1); // Estado para la página actual
   const [allObras, setAllObras] = useState([]);
-  const obrasPorPagina = 10; // Cantidad de obras por página
+  //#endregion
+
+  //#region ESTADOS PARA LAS OBRAS CON REQUISITOS
+  const [obrasSuperadas, setObrasSuperadas] = useState([]); // Estado para las obras superadas
+  const [obrasFacturadas, setObrasFacturadas] = useState([]); // Estado para las obras facturadas
+  const [obrasSeguimiento, setObrasSeguimiento] = useState([]); // Estado para las obras en seguimiento
+  const [obrasSinPedidosConHoras, setObrasSinPedidoConHoras] = useState([]); // Estado para las obras con horas pero sin pedidos
+  //#endregion
+
+  //#region ESTADOS PARA LA SELECCIÓN DE OBRAS CON REQUISITOS
+  const [obraSuperadaSelec, setObraSuperadaSelec] = useState(null);
+  const [obraFacturadaSelec, setObraFacturadaSelec] = useState(null);
+  const [obrasSeguimientoSelec, setObraSeguimientoSelec] = useState(null);
+  const [obraSinPedidosConHorasSelec, setObraSinPedidosConHorasSelec] =
+    useState(null);
+  //#endregion
+
+  const [currentPage, setCurrentPage] = useState(1); // Estado para la página actual
+
+  // ------------------- HOOKS ------------------- \\
+
   const navigate = useNavigate(); // Hook para la navegación
+
+  // ------------------- FETCH DE DATOS ------------------- \\
 
   // Funcion que hace fetch de todas las obras y las almacena en la variable allObras.
   const fetchObras = async () => {
     try {
       const endpoint = "http://localhost:3002/api/obra";
       const response = await axios.get(endpoint);
-      // Response.data tiene success y data. Hay que acceder a data.data para los datos (¿Está bien?)
+      // Response.data tiene success y data. Hay que acceder a data.data para los datos.
       setAllObras(response.data.data);
       setFilteredObras(response.data.data);
       countObrasSuperadas(response.data.data);
       countObrasFacturadas(response.data.data);
       countObrasSeguimiento(response.data.data);
+      countObrasConHorasSinPedidos(response.data.data);
     } catch (error) {
       console.error(`Error al recuperar las obras - ${error}`);
     }
   };
 
+  // ------------------- USE EFFECT ------------------- \\
+
   // Efecto para inicializar las obras filtradas y los conteos
   useEffect(() => {
     fetchObras();
   }, []); // Solo se ejecuta una vez cuando el componente se monta
+
+  // ------------------- HANDLES Y FUNCIONES AUXILIARES ------------------- \\
+
+  // Función para finalizar una obra
+  const handleFinalizarObra = async (idObra) => {
+    const update = { estadoObra: 4 }; // Corresponde con el estado Finalizada (No debería estar hardcodeado)
+    const endpoint = `http://localhost:3002/api/obra/${idObra}`;
+    try {
+      await axios.put(endpoint, update);
+      fetchObras();
+      setObraFacturadaSelec(null);
+    } catch (error) {
+      console.error(`Error al finalizar la obra - ${error}`);
+    }
+  };
 
   // Función para manejar la búsqueda de obras
   const handleSearch = () => {
@@ -70,19 +109,18 @@ const ObrasList = () => {
         obra.desc_estado_obra === "Confirmada" &&
         obra.horasTotal > obra.horas_previstas
     );
-    setObrasSuperadas(superadas.length);
+    setObrasSuperadas(superadas);
   };
-
-  // ------------ ESTA FUNCION DE MOMENTO NO FUNCIONA CORRECTAMENTE ------------ \\
 
   // Función para contar las obras confirmadas y totalmente facturadas hace más de 30 días
   const countObrasFacturadas = (obras) => {
     const facturadas = obras.filter((obra) => {
       if (
         obra.desc_estado_obra === "Confirmada" &&
-        (obra.pteFactura === obra.pteObra || obra.ptePedido === obra.pteObra)
+        (obra.total_facturas / obra.importe) * 100 >= 100 &&
+        (obra.total_pedidos / obra.importe) * 100 >= 100
       ) {
-        const facturacionDate = new Date(obra.fechaFacturacion);
+        const facturacionDate = new Date(obra.fecha_ultima_factura);
         const today = new Date();
         const diffTime = Math.abs(today - facturacionDate);
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
@@ -90,15 +128,20 @@ const ObrasList = () => {
       }
       return false;
     });
-    setObrasFacturadas(facturadas.length);
+    setObrasFacturadas(facturadas);
   };
-
-  // ----------------------------------------------------------------------------- \\
 
   // Función para contar las obras en seguimiento
   const countObrasSeguimiento = (obras) => {
     const enSeguimiento = obras.filter((obra) => obra.fecha_seg !== null);
-    setObrasSeguimiento(enSeguimiento.length);
+    setObrasSeguimiento(enSeguimiento);
+  };
+
+  const countObrasConHorasSinPedidos = (obras) => {
+    const sinPedidosConHoras = obras.filter(
+      (obra) => obra.total_pedidos === 0 && obra.total_horas !== 0
+    );
+    setObrasSinPedidoConHoras(sinPedidosConHoras);
   };
 
   // Función para manejar la adición de una nueva obra
@@ -107,11 +150,11 @@ const ObrasList = () => {
   };
 
   // Función para manejar la selección de una obra
-  const handleSelectObra = (cod) => {
+  const handleSelectObra = (idObra) => {
     setSelectedObras((prevSelected) =>
-      prevSelected.includes(cod)
-        ? prevSelected.filter((id) => id !== cod)
-        : [...prevSelected, cod]
+      prevSelected.includes(idObra)
+        ? prevSelected.filter((id) => id !== idObra)
+        : [...prevSelected, idObra]
     );
   };
 
@@ -119,7 +162,7 @@ const ObrasList = () => {
   const handleSelectAll = () => {
     setSelectAll(!selectAll);
     if (!selectAll) {
-      setSelectedObras(filteredObras.map((obra) => obra.cod));
+      setSelectedObras(filteredObras.map((obra) => obra.id_obra));
     } else {
       setSelectedObras([]);
     }
@@ -156,8 +199,10 @@ const ObrasList = () => {
     console.log("Obras seleccionadas para imprimir:", selectedObras);
   };
 
-  // ------------------- VARIABLES PARA LA PAGINACION --------------------- \\
+  // ------------------- VARIABLES AUXILIARES --------------------- \\
 
+  //#region VARIABLES PARA PAGINACIÓN
+  const obrasPorPagina = 10; // Cantidad de obras por página
   // Índices de inicio y fin de las obras a mostrar en la página actual
   const indexOfLastObra = currentPage * obrasPorPagina;
   const indexOfFirstObra = indexOfLastObra - obrasPorPagina;
@@ -165,7 +210,6 @@ const ObrasList = () => {
   const obrasActuales = filteredObras.slice(indexOfFirstObra, indexOfLastObra);
   // Número total de páginas
   const totalPaginas = Math.ceil(filteredObras.length / obrasPorPagina);
-
   // Número máximo de páginas a mostrar en la paginación
   const maxPaginasVisibles = 10;
 
@@ -178,71 +222,116 @@ const ObrasList = () => {
   for (let i = startPage; i <= endPage; i++) {
     paginasVisibles.push(i);
   }
+  //#endregion
 
-  // ---------------------------------------------------------------------- \\
+  // ----------------------------- JSX -------------------------------------- \\
 
   return (
     <div className="obras-list">
       <Alert variant="danger">
-        Hay {obrasSuperadas} obras confirmadas cuyo número de horas imputadas
-        supera las horas previstas.
-        <Form.Select>
-          <option>Seleccionar obra...</option>
-          {allObras
-            .filter(
-              (obra) =>
-                obra.desc_estado_obra === "Confirmada" &&
-                obra.horasTotal > obra.horas_previstas
-            )
-            .map((obra, index) => (
-              <option key={index} value={obra.cod}>
-                {obra.codigo_obra} - {obra.descripcion_obra} - Gastos Generales:{" "}
-                {obra.gastoGeneral} - Horas Previstas: {obra.horas_previstas} -
-                Horas Imputadas: {obra.horasTotal}
-              </option>
-            ))}
+        Hay {obrasSuperadas.length} obras confirmadas cuyo número de horas
+        imputadas supera las horas previstas.
+        <Form.Select onChange={(e) => setObraSuperadaSelec(e.target.value)}>
+          <option value="">Seleccionar obra...</option>
+          {obrasSuperadas.map((obra, index) => (
+            <option key={index} value={obra.id_obra}>
+              {obra.codigo_obra} - {obra.descripcion_obra} - Gastos Generales:{" "}
+              {obra.gastoGeneral} - Horas Previstas: {obra.horas_previstas} -
+              Horas Imputadas: {obra.horasTotal}
+            </option>
+          ))}
         </Form.Select>
+        <Button
+          className="custom-button mt-2"
+          disabled={!obraSuperadaSelec}
+          onClick={() =>
+            navigate(`/home/gestion-obras/detalle/${obraSuperadaSelec}`)
+          }
+        >
+          Ver Detalles
+        </Button>
       </Alert>
 
       <Alert variant="warning">
-        Hay {obrasFacturadas} obras confirmadas, totalmente facturadas hace más
-        de 30 días.
-        <Form.Select>
-          <option>Seleccionar obra...</option>
-          {allObras
-            .filter((obra) => {
-              if (obra.estado === "Confirmada" && obra.totalmenteFacturadas) {
-                const facturacionDate = new Date(obra.fechaFacturacion);
-                const today = new Date();
-                const diffTime = Math.abs(today - facturacionDate);
-                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-                return diffDays > 30;
-              }
-              return false;
-            })
-            .map((obra, index) => (
-              <option key={index} value={obra.cod}>
-                {obra.cod} - {obra.descripcion} - Última Factura:{" "}
-                {obra.fechaFacturacion}
-              </option>
-            ))}
+        Hay {obrasFacturadas.length} obras confirmadas, totalmente facturadas
+        hace más de 30 días.
+        <Form.Select onChange={(e) => setObraFacturadaSelec(e.target.value)}>
+          <option value="">Seleccionar obra...</option>
+          {obrasFacturadas.map((obra, index) => (
+            <option key={index} value={obra.id_obra}>
+              {obra.codigo_obra} - {obra.descripcion_obra} - Última Factura:{" "}
+              {new Date(obra.fecha_ultima_factura).toLocaleDateString("es-ES")}
+            </option>
+          ))}
         </Form.Select>
+        <div className="d-flex gap-2 mt-2">
+          <Button
+            className="custom-button"
+            disabled={!obraFacturadaSelec}
+            onClick={() =>
+              navigate(`/home/gestion-obras/detalle/${obraFacturadaSelec}`)
+            }
+          >
+            Ver Detalles
+          </Button>
+          <Button
+            className="custom-button"
+            onClick={() => handleFinalizarObra(obraFacturadaSelec)}
+            disabled={!obraFacturadaSelec}
+          >
+            Finalizar
+          </Button>
+        </div>
       </Alert>
 
       <Alert variant="info">
-        Hay {obrasSeguimiento} obras en seguimiento.
-        <Form.Select>
-          <option>Seleccionar obra...</option>
-          {allObras
-            .filter((obra) => obra.fecha_seg !== null)
-            .map((obra, index) => (
-              <option key={index} value={obra.codigo_obra}>
-                {obra.codigo_obra} - {obra.descripcion} - Fecha de Seguimiento:{" "}
-                {new Date(obra.fecha_seg).toLocaleDateString("es-ES")} - Motivo:{" "}
-                {obra.descripcion_seg}
-              </option>
-            ))}
+        Hay {obrasSeguimiento.length} obras en seguimiento.
+        <Form.Select onChange={(e) => setObraSeguimientoSelec(e.target.value)}>
+          <option value="">Seleccionar obra...</option>
+          {obrasSeguimiento.map((obra, index) => (
+            <option key={index} value={obra.id_obra}>
+              {obra.codigo_obra} - {obra.descripcion} - Fecha de Seguimiento:{" "}
+              {new Date(obra.fecha_seg).toLocaleDateString("es-ES")} - Motivo:{" "}
+              {obra.descripcion_seg}
+            </option>
+          ))}
         </Form.Select>
+        <Button
+          className="custom-button mt-2"
+          disabled={!obrasSeguimientoSelec}
+          onClick={() =>
+            navigate(`/home/gestion-obras/detalle/${obrasSeguimientoSelec}`)
+          }
+        >
+          Ver Detalles
+        </Button>
+      </Alert>
+
+      <Alert variant="danger">
+        Existen {obrasSinPedidosConHoras.length} obras sin pedido en las que se
+        han imputado horas. Pulse para acceder a la lista
+        <Form.Select
+          onChange={(e) => setObraSinPedidosConHorasSelec(e.target.value)}
+        >
+          <option value="">Seleccionar obra...</option>
+          {obrasSinPedidosConHoras.map((obra, index) => (
+            <option key={index} value={obra.id_obra}>
+              {obra.codigo_obra} - {obra.descripcion} - Horas totales:{" "}
+              {obra.total_horas} - Importe pedidos: {obra.total_pedidos}
+            </option>
+          ))}
+        </Form.Select>
+        <Button
+          className="custom-button mt-2"
+          disabled={!obraSinPedidosConHorasSelec}
+          onClick={() =>
+            navigate(
+              `/home/gestion-obras/detalle/${obraSinPedidosConHorasSelec}`
+            )
+          }
+        >
+          Ver Detalles
+        </Button>
       </Alert>
 
       <Container>
@@ -300,7 +389,6 @@ const ObrasList = () => {
               <th>Estado</th>
               <th>Empresa</th>
               <th>F. Oferta</th>
-              <th>Obs</th>
               <th>R</th>
               <th>%P.</th>
               <th>%F.</th>
@@ -314,8 +402,8 @@ const ObrasList = () => {
                   <td>
                     <Form.Check
                       type="checkbox"
-                      checked={selectedObras.includes(obra.cod)}
-                      onChange={() => handleSelectObra(obra.cod)}
+                      checked={selectedObras.includes(obra.id_obra)}
+                      onChange={() => handleSelectObra(obra.id_obra)}
                     />
                   </td>
                   <td>{obra.codigo_obra}</td>
@@ -328,19 +416,18 @@ const ObrasList = () => {
                       ? new Date(obra.fecha_oferta).toLocaleDateString("es-ES")
                       : "[No ofertada]"}
                   </td>
-                  <td>
-                    {obra.observaciones
-                      ? obra.observaciones
-                      : "[Sin observaciones]"}
-                  </td>
                   <td>{`${obra.rentabilidadPorcentaje ?? "-"} %`}</td>
                   <td>
                     {`${
-                      obra.pteObra ? (obra.ptePedido / obra.pteObra) * 100 : 0
+                      obra.importe !== 0
+                        ? (obra.total_pedidos / obra.importe) * 100
+                        : 0
                     } %`}{" "}
                   </td>
                   <td>{`${
-                    obra.pteObra ? (obra.pteFactura / obra.pteObra) * 100 : 0
+                    obra.importe !== 0
+                      ? (obra.total_facturas / obra.importe) * 100
+                      : 0
                   } %`}</td>
                   <td>
                     <Button
