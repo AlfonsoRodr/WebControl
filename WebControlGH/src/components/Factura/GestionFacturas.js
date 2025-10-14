@@ -74,26 +74,44 @@ function GestionFacturas() {
 		console.log("Facturas seleccionadas para copiar:", selectedFacturas);
 	};
 
-	// Funcion para borrar facturas
+	/**
+	 * Función que que realiza la petición DELETE sobre una factura.
+	 * Está función que está estrechamente ligada con el dar de baja de una factura.
+	 * 
+	 * @see {handleBajaFactura}
+	 * 
+	 * @note Esta petición requiere en el código del usuario que la dio de baja.
+	 * Como actualmente no se maneja la autenticación de usuario, se indicó que el código de usuario,
+	 * siempre será el 4. Pero esto en una versión futura más estable se debe de cambiar.
+	 * 
+	 * @param {number} selectedFacturas factura seleccionada para eliminar.
+	 * @returns {boolean} true si todo ha ido como se esperaba, falso en caso contrario.
+	 */
 	const deleteFactura = async (selectedFacturas) => {
 		try {
 			const deletePromises = Array.from(selectedFacturas).map(async (id) => {
-				await axios.delete(`http://localhost:3002/api/facturas/${id}`);
+				await axios.delete(`http://localhost:3002/api/facturas/${id}`, {
+					data: { codigoUsuarioBaja: 4 }
+				});
 				console.log(`Factura ${id} eliminada satisfactoriamente`);
 			});
 			await Promise.all(deletePromises);
-			// Si todo ha ido bien devolvemos true
 			return true;
 		}
 		catch (error) {
-			console.log("Error al eliminar facturas");
-			// Si ha habido un fallo en el borrado de alguna de las facturas
-			// devolvemos false
+			console.error("Error al eliminar facturas:", error.response?.data || error.message);
 			return false;
 		}
 	};
 
-	// Funcion para manejar la baja de una factura
+	/**
+	 * Función que se encarga de establecer una factura como dada de baja.
+	 * De esta forma, la factura sigue siendo accessible pero reflejando claramente que está de baja.
+	 * 
+	 * @see {deleteFactura}
+	 * 
+	 * @returns {void}
+	 */
 	const handleBajaFactura = async () => {
 		if (selectedFacturas.length === 0) {
 			alert("Por favor, selecciona al menos una factura para eliminar.");
@@ -103,7 +121,6 @@ function GestionFacturas() {
 			try {
 				const success = await deleteFactura(selectedFacturas);
 				if (success) {
-					// Volvemos a hacer un fetch de las facturas
 					await fetchFacturas();
 
 					// Importante limpiar la seleccion de facturas porque
@@ -112,16 +129,22 @@ function GestionFacturas() {
 					setSelectedFacturas([]);
 
 					alert("Facturas eliminadas correctamente");
-				} else {
+				} 
+				else {
 					alert("Error al eliminar algunas facturas");
 				}
-			} catch (error) {
+			} 
+			catch (error) {
 				console.error("Error en el proceso de borrado", error);
 			}
 		}
 	};
 
-	// Función para manejar la impresión de obras seleccionadas
+	/**
+	 * Función que se encarga de imprimir una factura seleccionada.
+	 * 
+	 * @returns {void}
+	 */
 	const handleImprimirFacturas = () => {
 		if (selectedFacturas.length === 0) {
 			alert("Por favor, selecciona al menos una factura para imprimir.");
@@ -140,7 +163,8 @@ function GestionFacturas() {
 		setSelectedFacturas((prevSelected) => {
 			if (prevSelected.includes(facturaId)) {
 				return prevSelected.filter((id) => id !== facturaId);
-			} else {
+			} 
+			else {
 				return [...prevSelected, facturaId];
 			}
 		});
