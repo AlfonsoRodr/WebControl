@@ -53,27 +53,28 @@ POST http://localhost:3002/api/obra
 Content-Type: application/json
 
 {
-    "cod": "1234567890",
-    "desc": "",
-    "fechaSeg": "",
-    "descSeg": "",
-    "tipoObra": "",
-    "facturable": "",
-    "estadoObra": "",
-    "fechaAlta": "",
-    "usuarioAlta": "",
-    "fechaFin": "",
-    "fechaOferta": "",
-    "horasPrevistas": 0,
-    "gastoPrevisto": 0,
-    "importe": 0,
-    "viabilidad": 100,
-    "empresa": "",
-    "contacto": "",
-    "edificio": "",
-    "observaciones": "",
-    "observacionesInternas": ""
+  "cod": "3816C10219P0007M003-R0",
+  "contacto": 1,
+  "desc": "CNIO suministro PXC100",
+  "descSeg": null,
+  "edificio": 47,
+  "empresa": 1,
+  "estadoObra": 4,
+  "facturable": 2,
+  "fechaAlta": "2022-06-16",
+  "fechaFin": null,
+  "fechaOferta": "2022-06-16",
+  "fechaSeg": null,
+  "gastoPrevisto": 1106,
+  "horasPrevistas": 0,
+  "importe": 1327.19,
+  "observaciones": "",
+  "observacionesInternas": "PROPIEDAD: CNIO\nGestor Att.: Alejandro Aguilera\n",
+  "tipoObra": 10,
+  "usuarioAlta": 10,
+  "viabilidad": 100
 }
+
 
 ### Actualizar obra
 PUT http://localhost:3002/api/obra/5303

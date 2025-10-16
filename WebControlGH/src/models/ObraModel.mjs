@@ -14,13 +14,16 @@ export class ObraModel {
       te.descripcion_estado AS desc_estado_obra,      
       e.nombre AS nombre_empresa,
       r.rentabilidadPorcentaje,
-      r.gastoGeneral,
       r.horasTotal,
+      ed.nombre AS nombre_edificio,
+      f.fecha_ultima_factura,
+      re2.id_obraPadre AS obra_padre,
+      COALESCE (re.num_hijas, 0) AS num_hijas,
+      COALESCE (go.total_gastos, 0) AS total_gastos,
       COALESCE(p.total_pedidos, 0) AS total_pedidos,
       COALESCE(f.total_facturas, 0) AS total_facturas,
-      f.fecha_ultima_factura,
       COALESCE (h.total_horas, 0) AS total_horas
-    
+
     FROM 
       obras AS o
     
@@ -35,6 +38,9 @@ export class ObraModel {
     
     LEFT JOIN
       rentabilidad AS r ON o.id_obra = r.id_obra
+
+    LEFT JOIN
+      edificios AS ed ON o.id_edificio = ed.id_edificio
     
     LEFT JOIN (
       SELECT id_obra, SUM(importe) AS total_pedidos FROM ecopedido GROUP BY id_obra
@@ -51,6 +57,20 @@ export class ObraModel {
       FROM horasobra
       GROUP BY id_obra
     ) AS h ON o.id_obra = h.id_obra
+
+    LEFT JOIN (
+	    SELECT id_obraPadre, COUNT(id_obraHija) AS num_hijas
+      FROM relacionobras
+      GROUP BY id_obraPadre
+    ) AS re ON o.id_obra = re.id_obraPadre
+
+    LEFT JOIN (
+	    SELECT id_obra, SUM((cantidad * importe)) AS total_gastos
+      FROM gastosobra
+      GROUP BY id_obra
+    ) AS go ON o.id_obra = go.id_obra
+
+    LEFT JOIN relacionobras AS re2 ON o.id_obra = re2.id_obraHija
     
     ORDER BY o.codigo_obra;`;
 
@@ -124,11 +144,10 @@ export class ObraModel {
     const validatedData = validateObra(input);
 
     if (!validatedData.success) {
-      // Error personalizado para que lo capture nuesto middleware de gestión de errores
-      const error = new Error("Validation Failed");
-      error.name = "ValidationError";
-      // Lanzamos el error para que lo atrape el controlador
-      throw error;
+      throw new ValidationError(
+        "Obra con formato inválido",
+        validatedData.error.issues
+      );
     }
 
     // Extraemos la info
