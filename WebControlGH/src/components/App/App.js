@@ -15,8 +15,8 @@ import ProfitabilityTable from "../Rentabilidad/ProfitabilityTable";
 import GestionAlmacen from "../Almacen/GestionAlmacen";
 
 // -- OBRA -- \\
-import ObrasList from "../Obra/ObrasList";
-import DetalleObra from "../Obra/DetalleObra";
+import ListaObras from "../Obra/GestionObras/index.js";
+import DetalleObra from "../Obra/DetalleObra/index.js";
 import NuevoObra from "../Obra/NuevoObra";
 import ImprimirObras from "../Obra/ImprimirObra";
 
@@ -61,7 +61,7 @@ function MainLayout() {
       <Navbar />
       <div className="container mt-4">
         <Routes>
-          <Route path="gestion-obras" element={<ObrasList />} />
+          <Route path="gestion-obras" element={<ListaObras />} />
           <Route path="nuevo-obra" element={<NuevoObra />} />
           <Route path="nueva-factura" element={<NuevaFactura />} />
           <Route path="nuevo-pedido" element={<NuevoPedido />} />

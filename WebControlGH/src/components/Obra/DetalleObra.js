@@ -1,3 +1,5 @@
+/* ARCHIVO ANTIGUO SIN REFACTORIZAR. NO USAR. LO MANTENEMOS DE BACKUP DE MOMENTO*/
+
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {

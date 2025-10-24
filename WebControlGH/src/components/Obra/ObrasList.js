@@ -1,3 +1,5 @@
+/* ARCHIVO ANTIGUO SIN REFACTORIZAR. NO USAR. LO MANTENEMOS DE BACKUP DE MOMENTO*/
+
 import React, { useState, useEffect } from "react"; // Importa React y hooks de React
 import {
   Table,
@@ -14,6 +16,8 @@ import {
 } from "react-bootstrap"; // Importa componentes de Bootstrap
 import { useNavigate } from "react-router-dom"; // Importa el hook useNavigate para la navegación
 import "../../css/ObrasList.css"; // Importa los estilos específicos de ObrasList
+// Importamos sessionStorage para cambios en el form de criterios de búsqueda y la paginación
+import { useSessionStorage } from "./Hooks/useSessionStorage.js";
 import axios from "axios";
 
 // Componente ObrasList
@@ -49,7 +53,7 @@ const ObrasList = () => {
   //#endregion
 
   //#region ESTADO PARA EL FORM DE BÚSQUEDA
-  const [formData, setFormData] = useState({
+  const defaultForm = {
     fechaInicio: "",
     fechaFin: "",
     complejo: "",
@@ -64,7 +68,8 @@ const ObrasList = () => {
     conGastos: "",
     relacionEntreObras: "",
     obrasDadasDeBaja: false,
-  });
+  };
+  const [formData, setFormData] = useSessionStorage("formData", defaultForm);
   //#endregion
 
   //#region ESTADOS PARA LOS DESPLEGABLES
@@ -75,7 +80,7 @@ const ObrasList = () => {
   //#endregion
 
   //#region ESTADOS PARA LA PAGINACIÓN
-  const [currentPage, setCurrentPage] = useState(1); // Estado para la página actual
+  const [currentPage, setCurrentPage] = useSessionStorage("currentPage", 1);
   //#endregion
 
   // ------------------- HOOKS ------------------- \\
@@ -97,6 +102,7 @@ const ObrasList = () => {
       countObrasFacturadas(response.data.data);
       countObrasSeguimiento(response.data.data);
       countObrasConHorasSinPedidos(response.data.data);
+      handleSearch(response.data.data);
     } catch (error) {
       if (error.response) {
         setError(
@@ -141,6 +147,8 @@ const ObrasList = () => {
   useEffect(() => {
     fetchObras();
     fetchDatosDesplegables();
+
+    // Si regresamos del componente de creación de obras, reseteamos la página
   }, []); // Solo se ejecuta una vez cuando el componente se monta
 
   // ------------------- HANDLERS Y FUNCIONES AUXILIARES ------------------- \\
@@ -173,8 +181,8 @@ const ObrasList = () => {
   //#endregion
 
   //#region HANDLER PARA LAS BÚSQUEDAS DE OBRAS
-  const handleSearch = () => {
-    let filtered = allObras;
+  const handleSearch = (obras = allObras) => {
+    let filtered = obras;
 
     if (formData.fechaInicio) {
       filtered = filtered.filter(
@@ -302,7 +310,6 @@ const ObrasList = () => {
     }
 
     setFilteredObras(filtered);
-    setCurrentPage(1);
   };
   //#endregion
 
@@ -375,6 +382,7 @@ const ObrasList = () => {
   //#region AGREGAR OBRA
   // Función para manejar la adición de una nueva obra
   const handleAgregarObra = () => {
+    setCurrentPage(1);
     navigate("/home/nuevo-obra");
   };
   //#endregion
@@ -962,11 +970,14 @@ const ObrasList = () => {
                 aria-describedby="basic-addon2"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="custom-input" // Agrega la clase personalizada
+                className="custom-input"
               />
               <Button
                 variant="primary"
-                onClick={handleSearch}
+                onClick={() => {
+                  setCurrentPage(1);
+                  handleSearch();
+                }}
                 className="custom-button2"
               >
                 Buscar
