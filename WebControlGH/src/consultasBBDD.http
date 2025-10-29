@@ -338,4 +338,3 @@ Content-Type: application/json
 ### Obtener el listado de movimientos del almacén asociado a una obra
 GET http://localhost:3002/api/movimientos-almacen/obra/1232
 
-
