@@ -1,4 +1,4 @@
-// ESTE ARCHIVO TIENE TODOS LOS ENDPOINTS SOBRE CONTACTOS DE LA API FACTURA DIRECTA
+// ESTE ARCHIVO TIENE TODOS LOS ENDPOINTS SOBRE MÉTODOS DE PAGO DE LA API FACTURA DIRECTA
 
 import axios from "axios";
 
@@ -11,25 +11,25 @@ const getHeaders = () => ({
 
 // Función para obtener la URL base
 const getBaseURL = () =>
-  `https://app.facturadirecta.com/api/${process.env.FACTURADIRECTA_COMPANY_ID}/contacts`;
+  `https://app.facturadirecta.com/api/${process.env.FACTURADIRECTA_COMPANY_ID}/paymentMethods`;
 
-export const contactoService = {
-  // Listar contactos
-  getAllContactos: () => axios.get(getBaseURL(), { headers: getHeaders() }),
+export const metodosPagoService = {
+  // Listar métodos de pago
+  getAllMetodos: () => axios.get(getBaseURL(), { headers: getHeaders() }),
 
-  // Obtener un contacto por ID
-  getContacto: (id) =>
+  // Obtener un método de pago por ID
+  getMetodo: (id) =>
     axios.get(`${getBaseURL()}/${id}`, { headers: getHeaders() }),
 
-  // Crear contacto
-  createContacto: (data) =>
+  // Crear método de pago
+  createMetodo: (data) =>
     axios.post(getBaseURL(), data, { headers: getHeaders() }),
 
-  // Actualizar contacto
-  updateContacto: (id, data) =>
+  // Actualizar método de pago
+  updateMetodo: (id, data) =>
     axios.put(`${getBaseURL()}/${id}`, data, { headers: getHeaders() }),
 
   // Eliminar contacto
-  deleteContacto: (id) =>
+  deleteMetodo: (id) =>
     axios.delete(`${getBaseURL()}/${id}`, { headers: getHeaders() }),
 };

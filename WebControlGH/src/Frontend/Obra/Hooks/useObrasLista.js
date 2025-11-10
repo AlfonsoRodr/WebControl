@@ -1,13 +1,18 @@
-// hooks/useObrasLista.js
-import { useState, useEffect } from "react";
+// Hook refactorizado para gestión de lista de obras
+import { useState, useEffect, useCallback } from "react";
+import { useSeleccionMultiple } from "./useSeleccionMultiple.js";
 import { obraService } from "../Services/obraService.js";
 
+/**
+ * Hook para gestión de lista de obras
+ * Refactorizado usando useSeleccionMultiple
+ *
+ * @returns {Object} Estado y funciones para gestionar lista de obras
+ */
 export const useObrasLista = () => {
   // Estados principales
   const [allObras, setAllObras] = useState([]);
   const [filteredObras, setFilteredObras] = useState([]);
-  const [selectedObras, setSelectedObras] = useState([]);
-  const [selectAll, setSelectAll] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -19,17 +24,22 @@ export const useObrasLista = () => {
     edificios: [],
   });
 
-  // Fetch de todas las obras
-  const fetchObras = async () => {
+  // Hook de selección múltiple
+  const seleccion = useSeleccionMultiple("id_obra");
+
+  /**
+   * Fetch de todas las obras
+   */
+  const fetchObras = useCallback(async () => {
     try {
       setLoading(true);
       const response = await obraService.getAllObras();
       const obras = response.data.data;
 
       setAllObras(obras);
-      setFilteredObras(obras);
+      // No establecer filteredObras aquí - se aplicarán los filtros en el useEffect
 
-      return obras; // Retornar para usar en callbacks
+      return obras;
     } catch (error) {
       if (error.response) {
         setError(
@@ -47,10 +57,12 @@ export const useObrasLista = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Fetch de catálogos/desplegables
-  const fetchCatalogos = async () => {
+  /**
+   * Fetch de catálogos/desplegables
+   */
+  const fetchCatalogos = useCallback(async () => {
     try {
       const [tiposObra, estadosObra, empresas, edificios] = await Promise.all([
         obraService.getTiposObra(),
@@ -68,56 +80,37 @@ export const useObrasLista = () => {
     } catch (error) {
       console.error(`Error al obtener los catálogos - ${error}`);
     }
-  };
-
-  // Handlers de selección
-  const handleSelectObra = (idObra) => {
-    setSelectedObras((prevSelected) =>
-      prevSelected.includes(idObra)
-        ? prevSelected.filter((id) => id !== idObra)
-        : [...prevSelected, idObra]
-    );
-  };
-
-  const handleSelectAll = (obras) => {
-    setSelectAll(!selectAll);
-    if (!selectAll) {
-      setSelectedObras(obras.map((obra) => obra.id_obra));
-    } else {
-      setSelectedObras([]);
-    }
-  };
-
-  // Limpiar selecciones
-  const clearSelections = () => {
-    setSelectedObras([]);
-    setSelectAll(false);
-  };
+  }, []);
 
   // Cargar datos iniciales
   useEffect(() => {
     fetchObras();
     fetchCatalogos();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {
-    // Estados
+    // Estados de obras
     allObras,
     filteredObras,
-    selectedObras,
-    selectAll,
     loading,
     error,
     catalogos,
 
-    // Setters (para usar desde otros hooks)
+    // Setters
     setFilteredObras,
-    setSelectedObras,
+    setSelectedObras: seleccion.setSelections,
 
     // Funciones
     fetchObras,
-    handleSelectObra,
-    handleSelectAll,
-    clearSelections,
+
+    // Selección (del hook useSeleccionMultiple)
+    selectedObras: seleccion.selected,
+    selectAll: seleccion.selectAll,
+    handleSelectObra: seleccion.handleSelect,
+    handleSelectAll: () => seleccion.handleSelectAll(filteredObras),
+    clearSelections: seleccion.clearSelections,
+    isSelected: seleccion.isSelected,
+    hasSelection: seleccion.hasSelection,
   };
 };

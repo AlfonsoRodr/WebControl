@@ -1,74 +1,104 @@
+// Hook refactorizado para operaciones sobre obras (finalizar, borrar, copiar, imprimir)
 import { useNavigate } from "react-router-dom";
+import { useApiRequest } from "./useApiRequest.js";
 import { obraService } from "../Services/obraService.js";
 import { normalizarFecha } from "../Utils/fechas.js";
 
+/**
+ * Hook para operaciones CRUD de obras (no confundir con el CRUD de entidades individuales)
+ * Refactorizado usando useApiRequest
+ *
+ * @param {Function} fetchObras - Función para recargar obras
+ * @param {Function} clearSelections - Función para limpiar selecciones
+ * @param {Function} setCurrentPage - Función para cambiar página
+ * @param {Function} setObraFacturadaSelec - Función para limpiar selección de obra facturada
+ * @returns {Object} Funciones de operaciones sobre obras
+ */
 export const useOperacionesObras = (
   fetchObras,
   clearSelections,
   setCurrentPage,
-  setObraFacturadaSelec
+  setObraFacturadaSelec = null
 ) => {
   const navigate = useNavigate();
+  const apiRequest = useApiRequest();
 
+  /**
+   * Navega a crear nueva obra
+   */
   const handleAgregarObra = () => {
     setCurrentPage(1);
     navigate("/home/nuevo-obra");
   };
 
+  /**
+   * Finaliza una obra (cambia estado a Finalizada)
+   */
   const handleFinalizarObra = async (idObra) => {
-    const update = { estadoObra: 4 }; // Corresponde con el estado Finalizada (No debería estar hardcodeado)
+    const update = { estadoObra: 4 }; // TODO: No debería estar hardcodeado
+
     try {
-      await obraService.updateObra(idObra, update);
-      fetchObras();
-      setObraFacturadaSelec(null);
+      await apiRequest.execute(() => obraService.updateObra(idObra, update));
+      await fetchObras();
+      if (setObraFacturadaSelec) {
+        setObraFacturadaSelec(null);
+      }
+      return true;
     } catch (error) {
       console.error(`Error al finalizar la obra - ${error}`);
+      return false;
     }
   };
 
-  const deleteObra = async (selectedObras) => {
+  /**
+   * Elimina múltiples obras
+   */
+  const handleBajaObras = async (selectedObras) => {
+    if (selectedObras.length === 0) {
+      alert("Por favor, selecciona al menos una obra para dar de baja");
+      return false;
+    }
+
+    if (!window.confirm("¿Estás seguro de dar de baja las obras seleccionadas?")) {
+      return false;
+    }
+
     try {
-      const deletePromises = Array.from(selectedObras).map(async (id) => {
-        await obraService.deleteObra(id);
-      });
+      // Eliminar obras en paralelo
+      const deletePromises = selectedObras.map((id) =>
+        obraService.deleteObra(id)
+      );
       await Promise.all(deletePromises);
+
+      await fetchObras();
+      clearSelections();
+      alert("Obras dadas de baja correctamente");
       return true;
     } catch (error) {
       console.error(
         "Error al dar de baja las obras:",
         error.response?.data || error.message
       );
+      alert("Error al dar de baja las obras seleccionadas");
       return false;
     }
   };
 
-  const handleBajaObras = async (selectedObras) => {
+  /**
+   * Copia múltiples obras
+   */
+  const handleCopiarObras = async (selectedObras, allObras) => {
     if (selectedObras.length === 0) {
-      alert("Por favor, selecciona al menos una obra para dar de baja");
-      return;
+      alert("Por favor, selecciona al menos una obra para copiar.");
+      return false;
     }
-    if (
-      window.confirm("¿Estás seguro de dar de baja las obras seleccionadas?")
-    ) {
-      try {
-        const success = await deleteObra(selectedObras);
-        if (success) {
-          await fetchObras();
-          clearSelections();
-          alert("Obras dadas de baja correctamente");
-        } else {
-          alert("Error al dar de baja las obras seleccionadas");
-        }
-      } catch (error) {
-        console.error(`Error en el proceso de dar de baja - ${error}`);
-      }
-    }
-  };
 
-  const copiarObra = async (selectedObras, allObras) => {
     try {
-      const copyPromises = Array.from(selectedObras).map(async (id) => {
-        const obra = allObras.filter((obra) => obra.id_obra === id)[0];
+      // Copiar obras en paralelo
+      const copyPromises = selectedObras.map(async (id) => {
+        const obra = allObras.find((o) => o.id_obra === id);
+        if (!obra) return null;
+
         const data = {
           cod: obra.codigo_obra,
           desc: obra.descripcion_obra,
@@ -91,42 +121,35 @@ export const useOperacionesObras = (
           observaciones: obra.observaciones,
           observacionesInternas: obra.observaciones_internas,
         };
-        await obraService.createObra(data);
+
+        return obraService.createObra(data);
       });
+
       await Promise.all(copyPromises);
+      await fetchObras();
+      clearSelections();
+      alert("Obras copiadas correctamente");
       return true;
     } catch (error) {
       console.error(`Error al copiar las obras - ${error}`);
+      alert("Error al copiar las obras");
       return false;
     }
   };
 
-  const handleCopiarObras = async (selectedObras, allObras) => {
-    if (selectedObras.length === 0) {
-      alert("Por favor, selecciona al menos una obra para copiar.");
-      return;
-    }
-    try {
-      const success = await copiarObra(selectedObras, allObras);
-      if (success) {
-        await fetchObras();
-        clearSelections();
-        alert("Obras copiadas correctamente");
-      } else {
-        alert("Error al copiar las obras");
-      }
-    } catch (error) {
-      console.error("Error en el proceso de copiado de obras", error);
-    }
-  };
+  /**
+   * Navega a impresión de obras
+   */
   const handleImprimirObras = (selectedObras) => {
     if (selectedObras.length === 0) {
       alert("Por favor, selecciona al menos una obra para imprimir.");
-      return;
+      return false;
     }
+
     navigate("/home/imprimir-obra", {
       state: { selectedObras: selectedObras },
     });
+    return true;
   };
 
   return {

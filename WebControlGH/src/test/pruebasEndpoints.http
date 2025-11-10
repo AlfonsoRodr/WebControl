@@ -3,7 +3,7 @@
 ##### ENDPOINTS CONTACTOS ###############
 
 ### 1. Listar contactos (ejecutar PRIMERO para obtener un ID de contacto real)
-GET http://localhost:3000/facturadirecta/contactos
+GET http://localhost:3000/facturadirecta/contactos/
 
 ### 
 

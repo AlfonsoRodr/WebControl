@@ -44,11 +44,7 @@ const ModalFactura = ({
             <Form.Control
               type="date"
               name="fechaFactura"
-              value={
-                formData.fechaFactura
-                  ? new Date(formData.fechaFactura).toISOString().slice(0, 10)
-                  : ""
-              }
+              value={formData.fechaFactura || ""}
               onChange={onChangeForm}
             />
           </Form.Group>
@@ -116,11 +112,7 @@ const ModalFactura = ({
               <Form.Control
                 type="date"
                 name="fechaCobro"
-                value={
-                  formData.fechaCobro
-                    ? new Date(formData.fechaCobro).toISOString().slice(0, 10)
-                    : ""
-                }
+                value={formData.fechaCobro || ""}
                 onChange={onChangeForm}
               />
             )}

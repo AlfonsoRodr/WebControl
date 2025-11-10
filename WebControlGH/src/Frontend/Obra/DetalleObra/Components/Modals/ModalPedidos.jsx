@@ -22,11 +22,7 @@ const ModalPedido = ({
             <Form.Control
               type="date"
               name="fechaPedido"
-              value={
-                formData.fechaPedido
-                  ? new Date(formData.fechaPedido).toISOString().slice(0, 10)
-                  : ""
-              }
+              value={formData.fechaPedido || ""}
               onChange={onChangeForm}
             />
           </Form.Group>

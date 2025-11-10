@@ -71,12 +71,13 @@ const ListaObras = () => {
     handleImprimirObras,
   } = useOperacionesObras(fetchObras, clearSelections, setCurrentPage);
 
-  // Aplicar filtros cuando cambien allObras o formData
+  // Aplicar filtros guardados solo cuando se cargan las obras por primera vez
   useEffect(() => {
     if (allObras.length > 0) {
       handleSearch(allObras);
     }
-  }, [allObras]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [allObras.length]);
 
   // Handlers para navegación
   const handleVerDetalle = (idObra) => {

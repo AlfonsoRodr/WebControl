@@ -1,81 +1,52 @@
-import { useState, useEffect } from "react";
+// Hook refactorizado para cargar y gestionar datos de una obra
+import { useState, useEffect, useCallback } from "react";
+import { useObraForm } from "./useObraForm.js";
+import { useApiRequest } from "./useApiRequest.js";
 import { obraService } from "../Services/obraService";
 import { normalizarFecha } from "../Utils/fechas";
 
+/**
+ * Hook para gestión completa de datos de una obra (ver/editar)
+ * Refactorizado usando useObraForm y useApiRequest
+ *
+ * @param {number} idObra - ID de la obra
+ * @returns {Object} Estado y funciones para gestionar la obra
+ */
 export const useObraData = (idObra) => {
   const [obra, setObra] = useState({});
   const [rentabilidad, setRentabilidad] = useState({});
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
   const [editarObra, setEditarObra] = useState(false);
-  const [enSeguimiento, setEnSeguimiento] = useState(false);
-  const [ofertado, setOfertado] = useState(false);
 
-  // Estados para catálogos
-  const [catalogos, setCatalogos] = useState({
-    tiposObra: [],
-    tiposFacturables: [],
-    estadosObra: [],
-    usuarios: [],
-    empresas: [],
-    edificios: [],
-    contactosEmpresa: [],
-  });
+  // Hook de peticiones API
+  const apiRequest = useApiRequest();
 
-  // Formulario de obra
-  const [formObra, setFormObra] = useState({
-    cod: "",
-    desc: "",
-    fechaSeg: "",
-    descSeg: "",
-    tipoObra: "",
-    facturable: "",
-    estadoObra: "",
-    fechaAlta: "",
-    usuarioAlta: "",
-    fechaFin: "",
-    fechaOferta: "",
-    horasPrevistas: "",
-    gastoPrevisto: "",
-    importe: "",
-    viabilidad: "",
-    empresa: "",
-    contacto: "",
-    edificio: "",
-    observaciones: "",
-    observacionesInternas: "",
-  });
+  // Hook del formulario de obra (inicialmente null, se cargará después)
+  const obraForm = useObraForm(null);
 
-  // Cargar datos de la obra
-  const fetchObra = async () => {
+  /**
+   * Carga los datos de la obra
+   */
+  const fetchObra = useCallback(async () => {
     try {
-      const res = await obraService.getObra(idObra);
-      const obraData = res.data.data[0];
+      const res = await apiRequest.execute(() => obraService.getObra(idObra));
+      if (!res) return;
+
+      const obraData = res[0];
       setObra(obraData);
 
-      setEnSeguimiento(obraData.fecha_seg ? true : false);
-      setOfertado(obraData.fecha_oferta ? true : false);
-
-      setFormObra({
+      // Actualizar formulario con datos de la obra
+      const formData = {
         cod: obraData.codigo_obra,
         desc: obraData.descripcion_obra,
-        fechaSeg: obraData.fecha_seg
-          ? normalizarFecha(obraData.fecha_seg)
-          : null,
+        fechaSeg: normalizarFecha(obraData.fecha_seg),
         descSeg: obraData.descripcion_seg,
         tipoObra: Number(obraData.tipo_obra),
         facturable: Number(obraData.facturable),
         estadoObra: Number(obraData.estado_obra),
-        fechaAlta: obraData.fecha_alta
-          ? normalizarFecha(obraData.fecha_alta)
-          : null,
+        fechaAlta: normalizarFecha(obraData.fecha_alta),
         usuarioAlta: Number(obraData.codigo_usuario_alta),
-        fechaFin: obraData.fecha_prevista_fin
-          ? normalizarFecha(obraData.fecha_prevista_fin)
-          : null,
-        fechaOferta: obraData.fecha_oferta
-          ? normalizarFecha(obraData.fecha_oferta)
-          : null,
+        fechaFin: normalizarFecha(obraData.fecha_prevista_fin),
+        fechaOferta: normalizarFecha(obraData.fecha_oferta),
         horasPrevistas: Number(obraData.horas_previstas),
         gastoPrevisto: Number(obraData.gasto_previsto),
         importe: Number(obraData.importe),
@@ -85,187 +56,117 @@ export const useObraData = (idObra) => {
         edificio: Number(obraData.id_edificio),
         observaciones: obraData.observaciones,
         observacionesInternas: obraData.observaciones_internas,
-      });
+      };
 
-      // Cargar contactos de la empresa
-      if (obraData.id_empresa) {
-        fetchContactosEmpresa(obraData.id_empresa);
-      }
+      obraForm.setFormObra(formData);
+
+      // Actualizar checkboxes basados en las fechas
+      obraForm.setEnSeguimiento(!!obraData.fecha_seg, false);
+      obraForm.setOfertado(!!obraData.fecha_oferta, false);
     } catch (err) {
-      setError(err);
       console.error(`Error al obtener la obra - ${err}`);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idObra]);
 
-  // Cargar rentabilidad
-  const fetchRentabilidad = async () => {
+  /**
+   * Carga la rentabilidad
+   */
+  const fetchRentabilidad = useCallback(async () => {
     try {
-      const res = await obraService.getRentabilidad(idObra);
-      setRentabilidad(res.data.data);
+      const res = await apiRequest.execute(() =>
+        obraService.getRentabilidad(idObra)
+      );
+      if (res) {
+        setRentabilidad(res);
+      }
     } catch (err) {
       console.error(`Error al obtener la rentabilidad - ${err}`);
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [idObra]);
 
-  // Cargar catálogos
-  const fetchCatalogos = async () => {
-    try {
-      const [
-        tiposObra,
-        tiposFacturables,
-        estadosObra,
-        usuarios,
-        empresas,
-        edificios,
-      ] = await Promise.all([
-        obraService.getTiposObra(),
-        obraService.getTiposFacturables(),
-        obraService.getEstadosObra(),
-        obraService.getUsuarios(),
-        obraService.getEmpresas(),
-        obraService.getEdificios(),
-      ]);
-
-      setCatalogos({
-        tiposObra: tiposObra.data.data,
-        tiposFacturables: tiposFacturables.data.data,
-        estadosObra: estadosObra.data.data,
-        usuarios: usuarios.data.data,
-        empresas: empresas.data.data,
-        edificios: edificios.data.data,
-        contactosEmpresa: [],
-      });
-    } catch (error) {
-      console.error(`Error al obtener los catálogos - ${error}`);
-    }
-  };
-
-  const fetchContactosEmpresa = async (idEmpresa) => {
-    try {
-      const res = await obraService.getContactosEmpresa(idEmpresa);
-      setCatalogos((prev) => ({ ...prev, contactosEmpresa: res.data.data }));
-    } catch (error) {
-      console.error(`Error al obtener los contactos - ${error}`);
-    }
-  };
-
-  // Handlers
-  const handleChangeFormObra = (e) => {
-    const { name, value } = e.target;
-    const camposNumericos = [
-      "tipoObra",
-      "facturable",
-      "estadoObra",
-      "usuarioAlta",
-      "horasPrevistas",
-      "gastoPrevisto",
-      "importe",
-      "viabilidad",
-      "empresa",
-      "contacto",
-      "edificio",
-    ];
-
-    setFormObra((prev) => ({
-      ...prev,
-      [name]: camposNumericos.includes(name) ? Number(value) : value,
-    }));
-
-    if (name === "empresa") {
-      fetchContactosEmpresa(value);
-    }
-  };
-
-  const handleChangeSeguimiento = () => {
-    setEnSeguimiento((prev) => {
-      const nuevoValor = !prev;
-      if (nuevoValor) {
-        setFormObra((prevForm) => ({
-          ...prevForm,
-          fechaSeg: obra.fecha_seg,
-          descSeg: obra.descripcion_seg,
-        }));
-      } else {
-        setFormObra((prevForm) => ({
-          ...prevForm,
-          fechaSeg: null,
-          descSeg: "",
-        }));
-      }
-      return nuevoValor;
-    });
-  };
-
-  const handleChangeOfertado = () => {
-    setOfertado((prev) => {
-      const nuevoValor = !prev;
-      if (nuevoValor) {
-        setFormObra((prevForm) => ({
-          ...prevForm,
-          fechaOferta: obra.fecha_oferta,
-        }));
-      } else {
-        setFormObra((prevForm) => ({
-          ...prevForm,
-          fechaOferta: null,
-        }));
-      }
-      return nuevoValor;
-    });
-  };
-
+  /**
+   * Guarda los cambios de la obra
+   */
   const handleGuardarObra = async () => {
     try {
-      await obraService.updateObra(idObra, formObra);
+      // Transformar datos antes de enviar: convertir null a string vacío para fechas
+      const dataToSend = {
+        ...obraForm.formObra,
+        fechaOferta: obraForm.formObra.fechaOferta || "",
+        fechaSeg: obraForm.formObra.fechaSeg || "",
+      };
+
+      console.log("Datos del formulario a enviar:", dataToSend);
+      await apiRequest.execute(() =>
+        obraService.updateObra(idObra, dataToSend)
+      );
       await fetchObra();
       setEditarObra(false);
+      return true;
     } catch (error) {
       console.error(`Error al guardar la obra - ${error}`);
+      return false;
     }
   };
 
+  /**
+   * Cancela la edición
+   */
   const handleCancelarObra = () => {
     fetchObra();
     setEditarObra(false);
   };
 
+  /**
+   * Elimina la obra
+   */
   const handleBajarObra = async (navigate) => {
     if (window.confirm("¿Estás seguro de querer eliminar esta obra?")) {
       try {
-        await obraService.deleteObra(idObra);
+        await apiRequest.execute(() => obraService.deleteObra(idObra));
         alert("Obra eliminada correctamente");
         navigate(-1);
+        return true;
       } catch (error) {
         alert("Error al eliminar la obra");
         console.error("Error al eliminar la obra", error);
+        return false;
       }
     }
+    return false;
   };
 
   // Cargar datos iniciales
   useEffect(() => {
     const loadData = async () => {
-      setLoading(true);
-      await Promise.all([fetchObra(), fetchRentabilidad(), fetchCatalogos()]);
-      setLoading(false);
+      await Promise.all([fetchObra(), fetchRentabilidad()]);
     };
     loadData();
-  }, [idObra]);
+  }, [fetchObra, fetchRentabilidad]);
 
   return {
+    // Datos de la obra
     obra,
     rentabilidad,
-    formObra,
-    catalogos,
-    loading,
-    error,
+    loading: apiRequest.loading,
+    error: apiRequest.error,
+
+    // Estado de edición
     editarObra,
-    enSeguimiento,
-    ofertado,
     setEditarObra,
-    handleChangeFormObra,
-    handleChangeSeguimiento,
-    handleChangeOfertado,
+
+    // Formulario (desde useObraForm)
+    formObra: obraForm.formObra,
+    catalogos: obraForm.catalogos,
+    enSeguimiento: obraForm.enSeguimiento,
+    ofertado: obraForm.ofertado,
+    handleChangeFormObra: obraForm.handleChange,
+    handleChangeSeguimiento: obraForm.handleChangeSeguimiento,
+    handleChangeOfertado: obraForm.handleChangeOfertado,
+
+    // Operaciones
     handleGuardarObra,
     handleCancelarObra,
     handleBajarObra,

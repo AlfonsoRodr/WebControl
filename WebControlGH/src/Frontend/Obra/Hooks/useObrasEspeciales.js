@@ -64,7 +64,8 @@ export const useObrasEspeciales = (obras) => {
       countObrasSeguimiento(obras);
       countObrasConHorasSinPedidos(obras);
     }
-  }, [obras]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [obras.length]);
 
   return {
     // Obras filtradas

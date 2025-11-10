@@ -89,9 +89,7 @@ const PedidosFacturas = ({
 
       <div className="mt-3">
         <strong>Totales</strong>
-        <p>
-          Total Importe Pedidos: {totales.totalImportePedidos?.toFixed(2) || 0}
-        </p>
+        <p>Total Importe Pedidos: {totales.importePedidos?.toFixed(2) || 0}</p>
         <p>% Pedido de la Obra: {totales.porcentajePedido?.toFixed(2) || 0}</p>
       </div>
 
@@ -164,8 +162,7 @@ const PedidosFacturas = ({
       <div className="mt-3">
         <strong>Totales</strong>
         <p>
-          Total Importe Facturas:{" "}
-          {totales.totalImporteFacturas?.toFixed(2) || 0}
+          Total Importe Facturas: {totales.importeFacturas?.toFixed(2) || 0}
         </p>
         <p>
           % Facturado de la Obra: {totales.porcentajeFacturado?.toFixed(2) || 0}

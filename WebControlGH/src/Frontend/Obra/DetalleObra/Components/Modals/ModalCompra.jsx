@@ -29,11 +29,7 @@ const ModalCompra = ({
             <Form.Control
               type="date"
               name="fechaAlta"
-              value={
-                formData.fechaAlta
-                  ? new Date(formData.fechaAlta).toISOString().slice(0, 10)
-                  : ""
-              }
+              value={formData.fechaAlta || ""}
               onChange={onChangeForm}
             />
           </Form.Group>

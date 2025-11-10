@@ -76,7 +76,6 @@ const DetalleObra = () => {
   });
 
   useEffect(() => {
-    console.log("hola");
     const idsObrasHijas = obrasRelacionadasHook.obrasHijas.map(
       (obra) => obra.id_obra
     );
@@ -94,7 +93,7 @@ const DetalleObra = () => {
       gastosHook.setHorasHijas([]);
       gastosHook.setHorasExtraHijas([]);
     }
-  }, [obrasRelacionadasHook.obrasHijas]);
+  }, [obrasRelacionadasHook.obrasHijas.length]);
 
   const handleGuardarCambios = async () => {
     await obrasRelacionadasHook.handleGuardarRelaciones();

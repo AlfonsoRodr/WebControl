@@ -224,22 +224,27 @@ const HorasGastos = ({
                   <td>{gasto.importe}</td>
                   <td>{(gasto.importe * gasto.cantidad).toFixed(2)}</td>
                   <td>
-                    <Button
-                      variant="info"
-                      size="sm"
-                      className="me-2"
-                      onClick={() => onEditarGastoAlmacen(gasto)}
-                    >
-                      Detalle
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => onEliminarGastoAlmacen(gasto.id)}
-                      disabled={!editarObra}
-                    >
-                      Eliminar
-                    </Button>
+                    <p>
+                      <Button
+                        variant="info"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => onEditarGastoAlmacen(gasto)}
+                      >
+                        Detalle
+                      </Button>
+                    </p>
+
+                    <p>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => onEliminarGastoAlmacen(gasto.id)}
+                        disabled={!editarObra}
+                      >
+                        Eliminar
+                      </Button>
+                    </p>
                   </td>
                 </tr>
               ))
@@ -289,22 +294,27 @@ const HorasGastos = ({
                   <td>{formatearFechaLocal(compra.fecha_alta)}</td>
                   <td>{compra.importe}</td>
                   <td>
-                    <Button
-                      variant="info"
-                      size="sm"
-                      className="me-2"
-                      onClick={() => onEditarCompra(compra)}
-                    >
-                      Detalle
-                    </Button>
-                    <Button
-                      variant="danger"
-                      size="sm"
-                      onClick={() => onEliminarCompra(compra.id)}
-                      disabled={!editarObra}
-                    >
-                      Eliminar
-                    </Button>
+                    <p>
+                      <Button
+                        variant="info"
+                        size="sm"
+                        className="me-2"
+                        onClick={() => onEditarCompra(compra)}
+                      >
+                        Detalle
+                      </Button>
+                    </p>
+
+                    <p>
+                      <Button
+                        variant="danger"
+                        size="sm"
+                        onClick={() => onEliminarCompra(compra.id)}
+                        disabled={!editarObra}
+                      >
+                        Eliminar
+                      </Button>
+                    </p>
                   </td>
                 </tr>
               ))

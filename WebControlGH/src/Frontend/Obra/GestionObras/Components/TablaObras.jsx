@@ -43,8 +43,8 @@ const TablaObras = ({
         </thead>
         <tbody>
           {obras.length > 0 ? (
-            obras.map((obra, index) => (
-              <tr key={index}>
+            obras.map((obra) => (
+              <tr key={obra.id_obra}>
                 <td>
                   <Form.Check
                     type="checkbox"
@@ -109,9 +109,7 @@ const TablaObras = ({
           ) : (
             <tr>
               <td colSpan="11" className="text-center">
-                {loading
-                  ? "Cargando detalles de las obras..."
-                  : "No se encontraron obras"}
+                {loading ? "Cargando detalles de las obras..." : ""}
               </td>
             </tr>
           )}

@@ -17,8 +17,8 @@ import GestionAlmacen from "../Almacen/GestionAlmacen";
 // -- OBRA -- \\
 import ListaObras from "../Obra/GestionObras/index.js";
 import DetalleObra from "../Obra/DetalleObra/index.js";
-import NuevoObra from "../Obra/NuevoObra";
-import ImprimirObras from "../Obra/ImprimirObra";
+import CrearObra from "../Obra/CrearObra/index.js";
+import ImprimirObras from "../Obra/ImprimirObra/ImprimirObra.js";
 
 // -- FACTURA -- \\
 import GestionFacturas from "../Factura/GestionFacturas";
@@ -62,7 +62,7 @@ function MainLayout() {
       <div className="container mt-4">
         <Routes>
           <Route path="gestion-obras" element={<ListaObras />} />
-          <Route path="nuevo-obra" element={<NuevoObra />} />
+          <Route path="nuevo-obra" element={<CrearObra />} />
           <Route path="nueva-factura" element={<NuevaFactura />} />
           <Route path="nuevo-pedido" element={<NuevoPedido />} />
           <Route path="nueva-compra" element={<NuevaCompra />} />
