@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react"; // Importa React y el hook useState
 import { Form, Button, Col, Row, Container, ListGroup } from "react-bootstrap"; // Importa componentes de Bootstrap
 import { useNavigate } from "react-router-dom"; // Importa el hook useNavigate para la navegación
-import "../css/NuevoObra.css"; // Importa los estilos específicos de NuevoObra
+import "../../css/NuevoObra.css"; // Importa los estilos específicos de NuevoObra
 import axios from "axios";
 
 // Componente NuevoObra

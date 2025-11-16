@@ -17,8 +17,8 @@ import GestionAlmacen from "../Almacen/GestionAlmacen";
 // -- OBRA -- \\
 import ListaObras from "../Obra/GestionObras/index.js";
 import DetalleObra from "../Obra/DetalleObra/index.js";
-import NuevoObra from "../Obra/NuevoObra";
-import ImprimirObras from "../Obra/ImprimirObra";
+import NuevoObra from "../Obra/CrearObra/NuevoObra.js";
+import ImprimirObras from "../Obra/ImprimirObra/ImprimirObra.js";
 
 // -- FACTURA -- \\
 import GestionFacturas from "../Factura/GestionFacturas";
