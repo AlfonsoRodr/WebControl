@@ -1,0 +1,119 @@
+nav {
+  background-color: #006486;
+  color: white;
+  padding: 10px 20px;
+  display: flex;
+  flex-direction: column; /* Cambio para acomodar elementos en columnas */
+  align-items: center; /* Centra los elementos en la dirección transversal */
+}
+
+.header-section {
+  /* Corregido para coincidir con tu HTML de referencia */
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%; /* Asegura que el header-section use todo el ancho disponible */
+  padding-bottom: 10px; /* Agrega espacio entre las secciones */
+}
+
+.logo {
+  font-size: 24px; /* Aproximadamente el tamaño de un h2 */
+  font-weight: bold;
+  margin: 0; /* Elimina cualquier margen predeterminado */
+}
+
+.menu-items {
+  display: flex;
+  justify-content: center; /* Centra los elementos del menú en su contenedor */
+  align-items: center;
+  width: 100%; /* Ocupa todo el ancho disponible para centrar correctamente */
+}
+
+.menu-items > div,
+.menu-items > a {
+  position: relative;
+  margin: 0 10px;
+  cursor: pointer;
+}
+
+.menu-items a {
+  color: white;
+  text-decoration: none;
+}
+
+.menu-items a:hover,
+.menu-items div:hover {
+  text-decoration: underline;
+}
+
+.submenu {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(
+    -50%
+  ); /* Centra el submenu debajo de su elemento padre */
+  background-color: #007bff;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #0056b3;
+  z-index: 1000;
+}
+
+.submenu a {
+  padding: 5px 10px;
+  color: white;
+  text-decoration: none;
+  text-align: center; /* Alinea el texto de los links del submenu al centro */
+}
+
+.submenu a:hover {
+  background-color: #0056b3;
+}
+
+.logout-button {
+  width: 150px; /* Ancho del botón */
+  height: 40px; /* Altura del botón */
+  background-color: #007bff;
+  border: none;
+  color: white;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.logout-button:hover {
+  background-color: #0056b3;
+}
+
+.dashboard {
+  background-color: #007bff; /* Un color secundario usado en el botón de desconectar */
+  margin-top: 20px;
+  padding: 20px; /* Agrega padding para un mejor espaciado del contenido */
+  border-radius: 8px; /* Opcional: agrega bordes redondeados para estilo */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Opcional: agrega sombra para profundidad */
+}
+
+/* Estilos para los títulos y párrafos dentro del dashboard para mejorar la legibilidad */
+.dashboard h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.dashboard p {
+  background-color: #0056b3; /* Color más oscuro para los párrafos, similar a los hover states */
+  padding: 10px;
+  color: white; /* Texto en blanco para mejorar la legibilidad */
+  border-radius: 4px; /* Bordes redondeados para los párrafos */
+  margin-bottom: 10px; /* Espaciado entre párrafos */
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.user-info h3 {
+  color: #eee;
+}

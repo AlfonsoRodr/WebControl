@@ -7,23 +7,28 @@ import {
   Pagination,
   Container,
   Row,
-  Col
+  Col,
 } from "react-bootstrap";
 
 import { useNavigate } from "react-router-dom";
+import "../css/FacturaDetalle.css";
 import axios from "axios";
 
 let allFacturas = null;
 
-function GestionCompras() {
+function GestionFacturas() {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
-    fechaInicio: "",
-    fechaFin: "",
-    pendientePago: "",
-    obra: "",
-    pedido: "",
-    origenFactura: "",
+    codigo_obra: "",
+    num_factura: "",
+    importe: "",
+    fechaAlta: "",
+    codigoUsuarioAlta: "",
+    fechaActualizacion: "",
+    fechaBaja: "",
+    codigoUsuarioBaja: "",
+    observaciones: "",
+    version: "",
   });
 
   const [filteredFacturas, setFilteredFacturas] = useState([]);
@@ -38,11 +43,11 @@ function GestionCompras() {
   }, []);
 
   const fetchFacturas = async () => {
-    const endpoint = "http://localhost:3002/compras";
+    const endpoint = "http://localhost:3002/api/facturas";
     try {
       const res = await axios.get(endpoint);
-      allFacturas = res.data;
-      setFilteredFacturas(res.data);
+      allFacturas = res.data.data;
+      setFilteredFacturas(res.data.data);
     } catch (err) {
       console.error("Error al obtener facturas", err);
     }
@@ -55,9 +60,8 @@ function GestionCompras() {
     }));
   };
 
-  // TODO
   const handleNuevaFactura = () => {
-    navigate("/home/nueva-compra");
+    navigate("/home/nueva-factura");
   };
 
   // Función para manejar la copia de obras seleccionadas
@@ -69,25 +73,46 @@ function GestionCompras() {
     console.log("Facturas seleccionadas para copiar:", selectedFacturas);
   };
 
-  // TODO
+  /**
+   * Función que que realiza la petición DELETE sobre una factura.
+   * Está función que está estrechamente ligada con el dar de baja de una factura.
+   *
+   * @see {handleBajaFactura}
+   *
+   * @note Esta petición requiere en el código del usuario que la dio de baja.
+   * Como actualmente no se maneja la autenticación de usuario, se indicó que el código de usuario,
+   * siempre será el 4. Pero esto en una versión futura más estable se debe de cambiar.
+   *
+   * @param {number} selectedFacturas factura seleccionada para eliminar.
+   * @returns {boolean} true si todo ha ido como se esperaba, falso en caso contrario.
+   */
   const deleteFactura = async (selectedFacturas) => {
     try {
-      const deletePromises = Array.from(selectedFacturas).map(async (numero) => {
-        await axios.delete(`http://localhost:3002/compras/${numero}`);
-        console.log(`Factura ${numero} eliminada satisfactoriamente`);
+      const deletePromises = Array.from(selectedFacturas).map(async (id) => {
+        await axios.delete(`http://localhost:3002/api/facturas/${id}`, {
+          data: { codigoUsuarioBaja: 4 },
+        });
+        console.log(`Factura ${id} eliminada satisfactoriamente`);
       });
       await Promise.all(deletePromises);
-      // Si todo ha ido bien devolvemos true
       return true;
     } catch (error) {
-      console.log("Error al eliminar facturas");
-      // Si ha habido un fallo en el borrado de alguna de las facturas
-      // devolvemos false
+      console.error(
+        "Error al eliminar facturas:",
+        error.response?.data || error.message
+      );
       return false;
     }
   };
 
-  // TODO
+  /**
+   * Función que se encarga de establecer una factura como dada de baja.
+   * De esta forma, la factura sigue siendo accessible pero reflejando claramente que está de baja.
+   *
+   * @see {deleteFactura}
+   *
+   * @returns {void}
+   */
   const handleBajaFactura = async () => {
     if (selectedFacturas.length === 0) {
       alert("Por favor, selecciona al menos una factura para eliminar.");
@@ -99,7 +124,6 @@ function GestionCompras() {
       try {
         const success = await deleteFactura(selectedFacturas);
         if (success) {
-          // Volvemos a hacer un fetch de las facturas
           await fetchFacturas();
 
           // Importante limpiar la seleccion de facturas porque
@@ -117,7 +141,11 @@ function GestionCompras() {
     }
   };
 
-  // TODO
+  /**
+   * Función que se encarga de imprimir una factura seleccionada.
+   *
+   * @returns {void}
+   */
   const handleImprimirFacturas = () => {
     if (selectedFacturas.length === 0) {
       alert("Por favor, selecciona al menos una factura para imprimir.");
@@ -211,7 +239,7 @@ function GestionCompras() {
 
   return (
     <div className="gestion-facturas">
-      <h3 style={{color: "white" }}>Listado de Facturas</h3>
+      <h3>Listado de Facturas</h3>
 
       <div style={{ textAlign: "left" }}>
         <Button
@@ -239,87 +267,131 @@ function GestionCompras() {
             <div className="row">
               <div className="col-md-3">
                 <Form.Group>
-                  <Form.Label style={{ color: "black" }}>
-                    Fecha Inicio Factura
-                  </Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="fechaInicio"
-                    value={formData.fechaInicio}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </div>
-
-              <div className="col-md-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>
-                    Fecha Fin Factura
-                  </Form.Label>
-                  <Form.Control
-                    type="date"
-                    name="fechaFin"
-                    value={formData.fechaFin}
-                    onChange={handleChange}
-                  />
-                </Form.Group>
-              </div>
-
-              <div className="col-md-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>
-                    Pendiente de Pago
-                  </Form.Label>
-                  <Form.Select
-                    name="pendientePago"
-                    value={formData.pendientePago}
-                    onChange={handleChange}
-                  >
-                    <option value="">Selecciona</option>
-                    <option value="si">Sí</option>
-                    <option value="no">No</option>
-                  </Form.Select>
-                </Form.Group>
-              </div>
-
-              <div className="col-md-3">
-                <Form.Group>
                   <Form.Label style={{ color: "black" }}>Obra</Form.Label>
                   <Form.Control
                     type="text"
-                    name="obra"
-                    value={formData.obra}
+                    name="idObra"
+                    value={formData.idObra}
                     onChange={handleChange}
-                    placeholder="Escribe el nombre de la obra"
                   />
                 </Form.Group>
               </div>
 
-              <div className="col-md-3 mt-3">
-                <Form.Group>
-                  <Form.Label style={{ color: "black" }}>Pedido</Form.Label>
-                  <Form.Control
-                    type="text"
-                    name="pedido"
-                    value={formData.pedido}
-                    onChange={handleChange}
-                    placeholder="Código de pedido"
-                  />
-                </Form.Group>
-              </div>
-
-              <div className="col-md-3 mt-3">
+              <div className="col-md-3">
                 <Form.Group>
                   <Form.Label style={{ color: "black" }}>
-                    Origen Factura
+                    ID Factura Compra
                   </Form.Label>
                   <Form.Control
                     type="text"
-                    name="origenFactura"
-                    value={formData.origenFactura}
+                    name="idFacturaCompra"
+                    value={formData.idFacturasCompras}
                     onChange={handleChange}
-                    placeholder="Origen de factura"
                   />
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>Importe</Form.Label>
+                  <Form.Select
+                    name="importe"
+                    value={formData.importe}
+                    onChange={handleChange}
+                  ></Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>
+                    Fecha de Alta
+                  </Form.Label>
+                  <Form.Select
+                    type="date"
+                    name="fechaAlta"
+                    value={formData.fechaAlta}
+                    onChange={handleChange}
+                  ></Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>
+                    Código Usuario Alta
+                  </Form.Label>
+                  <Form.Select
+                    name="codigoUsuarioAlta"
+                    value={formData.codigoUsuarioAlta}
+                    onChange={handleChange}
+                  ></Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>
+                    Fecha de Actualización
+                  </Form.Label>
+                  <Form.Select
+                    type="date"
+                    name="fechaActualizacion"
+                    value={formData.fechaActualizacion}
+                    onChange={handleChange}
+                  ></Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>
+                    Fecha de Baja
+                  </Form.Label>
+                  <Form.Select
+                    type="date"
+                    name="fechaBaja"
+                    value={formData.fechaBaja}
+                    onChange={handleChange}
+                  ></Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>
+                    Código Usuario de Baja
+                  </Form.Label>
+                  <Form.Select
+                    name="codigoUsuarioBaja"
+                    value={formData.codigoUsuarioBaja}
+                    onChange={handleChange}
+                  ></Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>
+                    Observaciones
+                  </Form.Label>
+                  <Form.Select
+                    type="text"
+                    name="observaciones"
+                    value={formData.observaciones}
+                    onChange={handleChange}
+                  ></Form.Select>
+                </Form.Group>
+              </div>
+
+              <div className="col-md-3">
+                <Form.Group>
+                  <Form.Label style={{ color: "black" }}>Versión</Form.Label>
+                  <Form.Select
+                    name="version"
+                    value={formData.version}
+                    onChange={handleChange}
+                  ></Form.Select>
                 </Form.Group>
               </div>
             </div>
@@ -344,8 +416,8 @@ function GestionCompras() {
       </div>
 
       <Container>
-        <Row className="mb-2" md={4}>
-          {/* <Col md={4} className="text-end"> */}
+        <Row className="mb-3">
+          <Col md={4} className="text-end">
             <Button onClick={handleNuevaFactura} className="custom-button">
               Nueva Factura
             </Button>
@@ -358,7 +430,7 @@ function GestionCompras() {
             <Button onClick={handleImprimirFacturas} className="custom-button">
               Imprimir Facturas
             </Button>
-          {/* </Col> */}
+          </Col>
         </Row>
       </Container>
 
@@ -372,17 +444,17 @@ function GestionCompras() {
                 onChange={handleSelectAll}
               />
             </th>
-            <th>Orig.</th>
-            <th>Factura-Pos</th>
-            <th>Pedido-Pos</th>
             <th>Obra</th>
-            <th>Fecha</th>
-            <th>ConceptoF</th>
-            <th>ConceptoL</th>
-            <th>Cobrado?</th>
+            <th>Facturas Compras</th>
             <th>Importe</th>
-            <th>Obs.F.Import</th>
-            <th>Acción</th>
+            <th>Fecha Alta</th>
+            <th>Fecha Actu</th>
+            <th>Fecha Baja</th>
+            <th>Usuario Alta</th>
+            <th>Usuario Baja</th>
+            <th>Observaciones</th>
+            <th>Versión</th>
+            <th>Detalles</th>
           </tr>
         </thead>
         <tbody>
@@ -396,16 +468,28 @@ function GestionCompras() {
                     onChange={() => handleCheckboxChange(factura.id)}
                   />
                 </td>
-                <td>{factura.origen}</td>
-                <td>{factura.factura_pos}</td>
-                <td>{factura.pedido_pos}</td>
-                <td>{factura.obra}</td>
-                <td>{factura.fecha_cabecera}</td>
-                <td>{factura.concepto_f}</td>
-                <td>{factura.concepto_l}</td>
-                <td>{factura.cobrado === 1 ? "Sí" : "[NO]"}</td>
+                <td>{factura.codigo_obra ?? "-"}</td>
+                <td>{factura.num_factura ?? "-"}</td>
                 <td>{factura.importe}</td>
-                <td>{factura.obs_imp}</td>
+                <td>
+                  {factura.fecha_alta
+                    ? new Date(factura.fecha_alta).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td>
+                  {factura.fecha_actualizacion
+                    ? new Date(factura.fecha_actualizacion).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td>
+                  {factura.fecha_baja
+                    ? new Date(factura.fecha_baja).toLocaleDateString()
+                    : "-"}
+                </td>
+                <td>{factura.codigo_usuario_alta ?? "-"}</td>
+                <td>{factura.codigo_usuario_baja ?? "-"}</td>
+                <td>{factura.observaciones ?? "-"}</td>
+                <td>{factura.version}</td>
                 <td>
                   <Button
                     variant="info"
@@ -441,4 +525,4 @@ function GestionCompras() {
   );
 }
 
-export default GestionCompras;
+export default GestionFacturas;

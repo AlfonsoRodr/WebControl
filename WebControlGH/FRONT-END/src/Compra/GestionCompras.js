@@ -211,7 +211,7 @@ function GestionCompras() {
 
   return (
     <div className="gestion-facturas">
-      <h3 style={{color: "white" }}>Listado de Facturas</h3>
+      <h3>Listado de Facturas</h3>
 
       <div style={{ textAlign: "left" }}>
         <Button
@@ -344,8 +344,8 @@ function GestionCompras() {
       </div>
 
       <Container>
-        <Row className="mb-2" md={4}>
-          {/* <Col md={4} className="text-end"> */}
+        <Row className="mb-3">
+          <Col md={4} className="text-end">
             <Button onClick={handleNuevaFactura} className="custom-button">
               Nueva Factura
             </Button>
@@ -358,7 +358,7 @@ function GestionCompras() {
             <Button onClick={handleImprimirFacturas} className="custom-button">
               Imprimir Facturas
             </Button>
-          {/* </Col> */}
+          </Col>
         </Row>
       </Container>
 

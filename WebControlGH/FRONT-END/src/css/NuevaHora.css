@@ -1,0 +1,82 @@
+.nueva-hora-container {
+  max-width: 100%; /* Ajusta este valor según sea necesario */
+  width: 100%;
+  margin: 0 auto; /* Centra el contenedor */
+  padding: 20px;
+}
+
+.nueva-hora {
+  color: black;
+  padding: 20px;
+  background-color: rgb(208, 208, 208); /* Fondo blanco */
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.nueva-hora h2 {
+  margin-top: 0;
+  margin-bottom: 20px;
+}
+
+.nueva-hora fieldset {
+  border: 1px solid #ddd;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.nueva-hora legend {
+  width: auto;
+  padding: 0 10px;
+  font-size: 1.2em;
+  color: #007BFF;
+}
+
+.nueva-hora .form-group {
+  margin-bottom: 15px;
+}
+
+.nueva-hora .form-label {
+  color: black;
+}
+
+.nueva-hora .form-control {
+  border-radius: 4px;
+}
+
+.nueva-hora .form-check-label {
+  color: black;
+}
+
+.nueva-hora .form-check-input {
+  margin-left: 0;
+}
+
+.nueva-hora .actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.nueva-hora .actions button {
+  margin-left: 10px;
+}
+
+.nueva-hora .btn-primary {
+  background-color: #007BFF;
+  border-color: #007BFF;
+}
+
+.nueva-hora .btn-secondary {
+  background-color: #6c757d;
+  border-color: #6c757d;
+}
+
+.nueva-hora .btn-primary:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.nueva-hora .btn-secondary:hover {
+  background-color: #5a6268;
+  border-color: #545b62;
+}
