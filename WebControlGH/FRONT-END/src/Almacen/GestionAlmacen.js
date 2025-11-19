@@ -81,7 +81,7 @@ function GestionAlmacen() {
 
   return (
     <div className="container mt-4">
-      <h2>Gestión de Almacén</h2>
+      <h2 style={{ color: "white" }}>Gestión de Almacén</h2>
 
       <div className="d-flex mb-3">
         <Form.Control

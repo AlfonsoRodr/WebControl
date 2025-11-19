@@ -404,7 +404,7 @@ function GestionFacturas() {
           type="text"
           placeholder="Busque por nombre y descripción"
           className="me-2"
-          style={{ maxWidth: "400px" }}
+          style={{ maxWidth: "300px" }}
         />
         <Button
           variant="primary"
@@ -416,8 +416,8 @@ function GestionFacturas() {
       </div>
 
       <Container>
-        <Row className="mb-3">
-          <Col md={4} className="text-end">
+        <Row className="mb-2" md={3}>
+          {/* <Col md={4} className="text-end"> */}
             <Button onClick={handleNuevaFactura} className="custom-button">
               Nueva Factura
             </Button>
@@ -430,7 +430,7 @@ function GestionFacturas() {
             <Button onClick={handleImprimirFacturas} className="custom-button">
               Imprimir Facturas
             </Button>
-          </Col>
+          {/* </Col> */}
         </Row>
       </Container>
 
@@ -445,13 +445,13 @@ function GestionFacturas() {
               />
             </th>
             <th>Obra</th>
-            <th>Facturas Compras</th>
+            <th>Factu Compras</th>
             <th>Importe</th>
             <th>Fecha Alta</th>
             <th>Fecha Actu</th>
             <th>Fecha Baja</th>
-            <th>Usuario Alta</th>
-            <th>Usuario Baja</th>
+            <th>User Alta</th>
+            <th>User Baja</th>
             <th>Observaciones</th>
             <th>Versión</th>
             <th>Detalles</th>
@@ -526,3 +526,28 @@ function GestionFacturas() {
 }
 
 export default GestionFacturas;
+
+/*
+Asi es como debería quedar la Paginación
+
+<Pagination>
+      <Pagination.First onClick={() => onPageChange(1)} />
+      {startPage > 1 && (
+        <Pagination.Prev onClick={() => onPageChange(startPage - 1)} />
+      )}
+      {paginasVisibles.map((page) => (
+        <Pagination.Item
+          key={page}
+          active={page === currentPage}
+          onClick={() => onPageChange(page)}
+        >
+          {page}
+        </Pagination.Item>
+      ))}
+      {endPage < totalPaginas && (
+        <Pagination.Next onClick={() => onPageChange(endPage + 1)} />
+      )}
+      <Pagination.Last onClick={() => onPageChange(totalPaginas)} />
+    </Pagination>
+    
+*/

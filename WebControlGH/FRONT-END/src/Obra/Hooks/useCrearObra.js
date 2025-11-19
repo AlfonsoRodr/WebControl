@@ -44,14 +44,7 @@ export const useCrearObra = () => {
         obrasHijasSeleccionadas.length > 0
           ? obrasHijasSeleccionadas.map((obra) => obra.id_obra)
           : [];
-<<<<<<< HEAD:WebControlGH/src/Frontend/Obra/Hooks/useCrearObra.js
       await obraService.setObrasHijas({ idObraPadre: idNuevaObra, idsObrasHijas });
-=======
-      await obraService.setObrasHijas({
-        idObraPadre: idNuevaObra,
-        idsObrasHijas,
-      });
->>>>>>> 502b0d8e716110fb80101427ae70f3087c8f53c0:WebControlGH/FRONT-END/src/Obra/Hooks/useCrearObra.js
 
       return nuevaObra;
     } catch (error) {

@@ -67,16 +67,8 @@ export const useObraForm = (obraInicial = null) => {
   );
 
   // Hook de catálogos
-<<<<<<< HEAD:WebControlGH/src/Frontend/Obra/Hooks/useObraForm.js
   const { catalogos, loading: loadingCatalogos, fetchContactosEmpresa } =
     useCatalogosBase();
-=======
-  const {
-    catalogos,
-    loading: loadingCatalogos,
-    fetchContactosEmpresa,
-  } = useCatalogosBase();
->>>>>>> 502b0d8e716110fb80101427ae70f3087c8f53c0:WebControlGH/FRONT-END/src/Obra/Hooks/useObraForm.js
 
   // Checkbox "Ofertado"
   const ofertadoCheckbox = useCheckboxCondicional(

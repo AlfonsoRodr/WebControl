@@ -17,11 +17,7 @@ import GestionAlmacen from "../Almacen/GestionAlmacen";
 // -- OBRA -- \\
 import ListaObras from "../Obra/GestionObras/index.js";
 import DetalleObra from "../Obra/DetalleObra/index.js";
-<<<<<<< HEAD:WebControlGH/src/Frontend/App/App.js
 import CrearObra from "../Obra/CrearObra/index.js";
-=======
-import NuevoObra from "../Obra/CrearObra/NuevoObra.js";
->>>>>>> 502b0d8e716110fb80101427ae70f3087c8f53c0:WebControlGH/FRONT-END/src/App/App.js
 import ImprimirObras from "../Obra/ImprimirObra/ImprimirObra.js";
 
 // -- FACTURA -- \\
